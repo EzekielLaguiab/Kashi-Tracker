@@ -1,6 +1,6 @@
 {
   "name": "Kashi Tracker",
-  "short_name": "Kashi",
+  "short_name": "Kashi Tracker",
   "description": "Your personal money tracker.",
   "start_url": "./",
   "scope": "./",
