@@ -1,0 +1,1614 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <script>
+      (function () {
+        function preventPinchZoom(event) {
+          if (
+            (event.touches && event.touches.length > 1) ||
+            (typeof event.scale === "number" && event.scale !== 1)
+          ) {
+            event.preventDefault();
+          }
+        }
+
+        document.addEventListener("gesturestart", preventPinchZoom, {
+          passive: false,
+        });
+        document.addEventListener("gesturechange", preventPinchZoom, {
+          passive: false,
+        });
+        document.addEventListener("touchmove", preventPinchZoom, {
+          passive: false,
+        });
+      })();
+    </script>
+    <title>Kashi Tracker</title>
+    <meta name="theme-color" content="#EAE4DF" />
+    <meta name="description" content="Kashi — your personal money tracker." />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Kashi" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <link rel="stylesheet" href="css/all.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <div class="notification-toast" id="notificationToast">
+      <div class="notification-header">
+        <!-- CHANGED: FA icon replaces emoji ✓ -->
+        <span class="notification-icon" id="notifIcon"
+          ><i class="fa-solid fa-circle-check"></i
+        ></span>
+        <span id="notifTitle">Success</span>
+      </div>
+      <div class="notification-body" id="notifBody"></div>
+    </div>
+
+    <div class="header">
+      <div class="header-left">
+        <!-- CHANGED: FA bars icon replaces ☰ -->
+        <button class="menu-toggle" onclick="toggleSidebar()" type="button">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <img class="brand-logo" src="icons/logo-mark.png" alt="" width="32" height="32" />
+        <div class="logo-text">Kashi Tracker</div>
+      </div>
+      <!-- CHANGED: FA magnifying-glass replaces 🔍 - Changed to button for proper semantics -->
+      <button
+        class="search-icon"
+        onclick="openSearchModal()"
+        type="button"
+        aria-label="Search"
+      >
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img class="brand-logo" src="icons/logo-mark.png" alt="" width="34" height="34" />
+        <span class="logo-text" id="sidebarLogoText">Kashi Tracker</span>
+      </div>
+      <div class="sidebar-body">
+        <!-- 1. Data Management -->
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Data</div>
+          <!-- UPDATED: Reset All Data moved from Preferences to sidebar -->
+          <button
+            class="sidebar-item sidebar-reset-btn"
+            onclick="
+              openResetModal();
+              closeSidebar();
+            "
+          >
+            <i class="fa-solid fa-trash-can"></i>Reset All Data
+          </button>
+        </div>
+
+        <!-- 2. Currency -->
+        <div class="sidebar-currency-row">
+          <span class="sidebar-toggle-label" style="font-size: 13px">
+            <!-- CHANGED: FA exchange icon replaces 💱 -->
+            <i
+              class="fa-solid fa-arrow-right-arrow-left"
+              style="font-size: 13px"
+            ></i
+            >&nbsp;&nbsp;Currency
+          </span>
+          <button
+            class="sidebar-currency-btn"
+            id="sidebarCurrencyBtn"
+            onclick="
+              openCurrencyModal();
+              closeSidebar();
+            "
+          >
+            ₱ PHP
+          </button>
+        </div>
+
+        <!-- 3. Appearance -->
+        <!-- UPDATED: clean palette icon, no background square -->
+        <div class="sidebar-mini-label">
+          <i
+            class="fa-solid fa-palette"
+            style="margin-right: 6px; font-size: 10px"
+          ></i
+          >Appearance
+        </div>
+        <div class="sidebar-swatches" id="sidebarSwatches">
+          <div
+            class="sidebar-swatch active"
+            data-theme="kashi"
+            style="background: linear-gradient(135deg, #f2b8a0, #c8935a)"
+            title="Kashi"
+            onclick="applyTheme('kashi')"
+          ></div>
+          <div
+            class="sidebar-swatch"
+            data-theme="gold"
+            style="background: linear-gradient(135deg, #d4af37, #b8962e)"
+            title="Gold"
+            onclick="applyTheme('gold')"
+          ></div>
+          <div
+            class="sidebar-swatch"
+            data-theme="ocean"
+            style="background: linear-gradient(135deg, #29b6f6, #0288d1)"
+            title="Ocean"
+            onclick="applyTheme('ocean')"
+          ></div>
+          <div
+            class="sidebar-swatch"
+            data-theme="sakura"
+            style="background: linear-gradient(135deg, #f48fb1, #e91e8c)"
+            title="Sakura"
+            onclick="applyTheme('sakura')"
+          ></div>
+          <div
+            class="sidebar-swatch"
+            data-theme="forest"
+            style="background: linear-gradient(135deg, #66bb6a, #388e3c)"
+            title="Forest"
+            onclick="applyTheme('forest')"
+          ></div>
+          <div
+            class="sidebar-swatch"
+            data-theme="midnight"
+            style="background: linear-gradient(135deg, #b39ddb, #7e57c2)"
+            title="Midnight"
+            onclick="applyTheme('midnight')"
+          ></div>
+        </div>
+
+        <!-- 4. Dark Mode -->
+        <div class="sidebar-toggle-row">
+          <span class="sidebar-toggle-label">
+            <!-- CHANGED: FA moon icon replaces 🌙 -->
+            <span id="darkModeIcon"><i class="fa-solid fa-moon"></i></span
+            >&nbsp;Dark Mode
+          </span>
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              id="darkModeToggle"
+              onchange="applyDarkMode(this.checked)"
+            />
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+
+        <!-- 5. Support (Help & Feedback) -->
+        <!-- UPDATED: Help & Feedback support section -->
+        <div class="sidebar-section sidebar-section--support">
+          <div class="sidebar-section-title">Support</div>
+          <button class="sidebar-item" id="helpBtn">
+            <i class="fa-solid fa-circle-question"></i>Help
+          </button>
+          <button class="sidebar-item" id="feedbackBtn">
+            <i class="fa-solid fa-envelope"></i>Feedback
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-container">
+      <!-- Records -->
+      <div class="section active" id="records-section">
+        <!-- Records / Budget tab switcher -->
+        <div class="records-page-tabs">
+          <button
+            class="rec-tab-btn active"
+            id="recTabRecords"
+            onclick="switchRecordsTab('records')"
+          >
+            <i class="fa-solid fa-list-ul"></i> Records
+          </button>
+          <button
+            class="rec-tab-btn"
+            id="recTabBudget"
+            onclick="switchRecordsTab('budget')"
+          >
+            <i class="fa-solid fa-wallet"></i> Budgets
+          </button>
+        </div>
+
+        <!-- RECORDS SUB-PANEL -->
+        <div id="recordsSubPanel">
+          <div class="records-header">
+            <div class="month-nav">
+              <button onclick="previousMonth()">&#8249;</button>
+              <span id="currentMonth"></span>
+              <button onclick="nextMonth()">&#8250;</button>
+            </div>
+            <button
+              onclick="toggleBulkMode()"
+              id="bulkToggleBtn"
+              class="bulk-toggle-btn"
+            >
+              <i class="fa-regular fa-square-check"></i>Select
+            </button>
+          </div>
+          <div class="bulk-select-bar" id="bulkSelectBar">
+            <div style="display: flex; align-items: center; gap: 10px">
+              <button class="bulk-select-all-btn" onclick="bulkSelectAll()">
+                All
+              </button>
+              <span class="bulk-select-info" id="bulkSelectCount"
+                >0 selected</span
+              >
+            </div>
+            <div style="display: flex; gap: 8px">
+              <button
+                class="bulk-delete-btn"
+                id="bulkDeleteBtn"
+                disabled
+                onclick="confirmBulkDelete()"
+              >
+                <i class="fa-solid fa-trash-can" style="margin-right: 4px"></i
+                >Delete
+              </button>
+              <button class="bulk-cancel-btn" onclick="exitBulkMode()">
+                Cancel
+              </button>
+            </div>
+          </div>
+          <div
+            id="filterBanner"
+            style="
+              display: none;
+              align-items: center;
+              justify-content: space-between;
+              padding: 8px 14px;
+              margin: 8px 0 2px;
+              background: var(--glass);
+              border: 1px solid var(--glass-border);
+              border-radius: var(--radius-md);
+              font-size: 13px;
+              color: var(--text-secondary);
+            "
+          ></div>
+          <!-- Monthly Summary -->
+          <div class="records-monthly-summary" id="recordsMonthlySummary">
+            <div class="rms-tile rms-tile-expense">
+              <span class="rms-label"
+                ><i class="fa-solid fa-arrow-trend-down"></i> Expense</span
+              >
+              <span class="rms-value rms-expense"
+                ><span class="curr-prefix" id="pfx-rmsExpense"></span
+                ><span id="rmsExpense">0.00</span></span
+              >
+            </div>
+            <div class="rms-tile rms-tile-income">
+              <span class="rms-label"
+                ><i class="fa-solid fa-arrow-trend-up"></i> Income</span
+              >
+              <span class="rms-value rms-income"
+                ><span class="curr-prefix" id="pfx-rmsIncome"></span
+                ><span id="rmsIncome">0.00</span></span
+              >
+            </div>
+            <div class="rms-tile rms-tile-net">
+              <span class="rms-label"
+                ><i class="fa-solid fa-scale-balanced"></i> Net</span
+              >
+              <span class="rms-value" id="rmsNet">0.00</span>
+            </div>
+          </div>
+          <div id="transactionsContainer" style="margin-top: 10px"></div>
+        </div>
+
+        <!-- BUDGET SUB-PANEL -->
+        <div id="budgetSubPanel" style="display: none">
+          <div class="records-header">
+            <div class="month-nav">
+              <button onclick="previousBudgetMonth()">&#8249;</button>
+              <span id="currentBudgetMonthNav"></span>
+              <button onclick="nextBudgetMonth()">&#8250;</button>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 10px;
+              margin-top: 14px;
+              margin-bottom: 4px;
+            "
+          >
+            <div class="stat-tile">
+              <span class="stat-tile-label">Budget</span>
+              <span class="stat-tile-value amount-balance"
+                ><span class="curr-prefix" id="pfx-totalBudget"></span
+                ><span id="totalBudget">0.00</span></span
+              >
+            </div>
+            <div class="stat-tile">
+              <span class="stat-tile-label">Spent</span>
+              <span class="stat-tile-value amount-expense"
+                ><span class="curr-prefix" id="pfx-totalBudgetSpent"></span
+                ><span id="totalBudgetSpent">0.00</span></span
+              >
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; margin: 15px 0">
+            <button
+              class="add-btn-outline"
+              onclick="openBudgetModal()"
+              style="margin-top: 0; flex: 1"
+            >
+              + Add Budget
+            </button>
+            <button
+              class="add-btn-outline"
+              onclick="openCopyBudgetModal()"
+              style="margin-top: 0; flex: 1; font-size: 13px"
+            >
+              <i class="fa-regular fa-clipboard" style="margin-right: 5px"></i
+              >Copy Previous Month
+            </button>
+          </div>
+          <div class="budgets-grid" id="budgetsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Analysis -->
+      <div class="section" id="analysis-section">
+        <div class="records-header">
+          <div class="month-nav">
+            <button onclick="previousAnalysisMonth()">&#8249;</button>
+            <span id="currentAnalysisMonth"></span>
+            <button onclick="nextAnalysisMonth()">&#8250;</button>
+          </div>
+        </div>
+        <div style="margin: 20px 0">
+          <label class="form-label">Analysis View</label>
+          <select
+            class="form-select"
+            id="analysisTypeSelector"
+            onchange="changeAnalysisView()"
+          >
+            <!-- CHANGED: clean text labels, no emojis -->
+            <option value="expense-overview">Expense Overview</option>
+            <option value="income-overview">Income Overview</option>
+          </select>
+        </div>
+        <div class="analysis-view" id="expense-overview-view">
+          <div class="chart-container">
+            <!-- CHANGED: FA chart-pie icon replaces 📊 -->
+            <div class="chart-title">
+              <i
+                class="fa-solid fa-chart-pie"
+                style="margin-right: 8px; color: var(--gold)"
+              ></i
+              >EXPENSE OVERVIEW
+            </div>
+            <div class="chart-wrapper"><canvas id="expenseChart"></canvas></div>
+            <div class="chart-legend-grid" id="expenseLegend"></div>
+          </div>
+          <div class="category-breakdown" id="expenseBreakdown"></div>
+        </div>
+        <div
+          class="analysis-view"
+          id="income-overview-view"
+          style="display: none"
+        >
+          <div class="chart-container">
+            <!-- CHANGED: FA chart-bar icon replaces 💵 -->
+            <div class="chart-title">
+              <i
+                class="fa-solid fa-chart-bar"
+                style="margin-right: 8px; color: var(--gold)"
+              ></i
+              >INCOME OVERVIEW
+            </div>
+            <div class="chart-wrapper"><canvas id="incomeChart"></canvas></div>
+            <div class="chart-legend-grid" id="incomeLegend"></div>
+          </div>
+          <div class="category-breakdown" id="incomeBreakdown"></div>
+        </div>
+      </div>
+
+      <!-- Budgets section moved into records-section tab -->
+
+      <!-- Accounts -->
+      <div class="section" id="accounts-section">
+        <div
+          style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap"
+        >
+          <div
+            class="stat-tile"
+            style="
+              flex-direction: column;
+              align-items: flex-start;
+              justify-content: center;
+            "
+          >
+            <span class="stat-tile-label"
+              ><i class="fa-solid fa-scale-balanced"></i> Net</span
+            >
+            <span class="stat-tile-value amount-balance"
+              ><span class="curr-prefix" id="pfx-accountsTotal"></span
+              ><span id="accountsTotal">0.00</span></span
+            >
+          </div>
+          <div
+            class="stat-tile"
+            style="
+              flex-direction: column;
+              align-items: flex-start;
+              justify-content: center;
+            "
+          >
+            <span class="stat-tile-label"
+              ><i class="fa-solid fa-arrow-trend-down"></i> Expense</span
+            >
+            <span class="stat-tile-value amount-expense"
+              ><span class="curr-prefix" id="pfx-accountsExpense"></span
+              ><span id="accountsExpense">0.00</span></span
+            >
+          </div>
+          <div
+            class="stat-tile"
+            style="
+              flex-direction: column;
+              align-items: flex-start;
+              justify-content: center;
+            "
+          >
+            <span class="stat-tile-label"
+              ><i class="fa-solid fa-arrow-trend-up"></i> Income</span
+            >
+            <span class="stat-tile-value amount-income"
+              ><span class="curr-prefix" id="pfx-accountsIncome"></span
+              ><span id="accountsIncome">0.00</span></span
+            >
+          </div>
+        </div>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0 0 12px;
+          "
+        >
+          <h3 style="color: var(--text-primary); margin: 0">Accounts</h3>
+          <button
+            id="accountSortBtn"
+            onclick="toggleAccountSort()"
+            style="
+              background: none;
+              border: 1px solid var(--glass-border);
+              color: var(--text-secondary);
+              padding: 6px 12px;
+              border-radius: var(--radius-full);
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              gap: 5px;
+              transition: all 0.2s;
+            "
+          >
+            <!-- CHANGED: FA sort icon replaces ⇅ -->
+            <span id="accountSortIcon"
+              ><i class="fa-solid fa-arrow-up-arrow-down"></i
+            ></span>
+            <span id="accountSortLabel">Sort: Default</span>
+          </button>
+        </div>
+        <div class="accounts-grid" id="accountsContainer"></div>
+        <button class="add-btn-outline" onclick="openAccountModal()">
+          + ADD NEW ACCOUNT
+        </button>
+      </div>
+
+      <!-- Categories -->
+      <div class="section" id="categories-section">
+        <div class="categories-grid" id="categoriesContainer"></div>
+      </div>
+
+      <!-- Preferences -->
+      <div class="section" id="preferences-section">
+
+        <div class="pref-section-title">Danger Zone</div>
+        <div class="pref-card">
+          <div class="pref-row danger" onclick="openResetModal()">
+            <!-- CHANGED: FA trash icon replaces 🗑️ -->
+            <div class="pref-row-icon">
+              <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <div class="pref-row-info">
+              <div class="pref-row-label">Reset All Data</div>
+              <div class="pref-row-desc">
+                Permanently deletes all records, accounts, categories &amp;
+                budgets
+              </div>
+            </div>
+            <div class="pref-row-arrow" style="color: #f44336">&#8250;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div
+      id="deleteConfirmModal"
+      style="display: none; position: fixed; inset: 0; z-index: 5000"
+    >
+      <div class="danger-modal-overlay" onclick="closeDeleteModal(event)">
+        <div class="danger-modal-box" onclick="event.stopPropagation()">
+          <div class="danger-modal-icon" id="deleteModalIcon" style="display:none;"></div>
+          <div class="danger-modal-title" id="deleteModalTitle">Delete?</div>
+          <div class="danger-modal-desc" id="deleteModalDesc">
+            This action cannot be undone.
+          </div>
+          <div class="danger-modal-btns">
+            <button class="danger-cancel-btn" onclick="closeDeleteModal()">
+              Cancel
+            </button>
+            <button
+              class="danger-confirm-btn"
+              id="deleteModalConfirmBtn"
+              onclick="executeDelete()"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Validation Modal -->
+    <div
+      id="validationModal"
+      style="display: none; position: fixed; inset: 0; z-index: 5000"
+    >
+      <div class="danger-modal-overlay" onclick="closeValidationModal(event)">
+        <div
+          class="danger-modal-box"
+          onclick="event.stopPropagation()"
+          style="
+            border-color: rgba(212, 175, 55, 0.4);
+            box-shadow: 0 8px 40px rgba(212, 175, 55, 0.15);
+          "
+        >
+          <!-- CHANGED: FA warning triangle icon -->
+          <div class="danger-modal-icon"><i class=""></i></div>
+          <div
+            class="danger-modal-title"
+            style="color: var(--gold)"
+            id="validationModalTitle"
+          >
+            Please fill in the following
+          </div>
+          <div id="validationModalList" style="margin-bottom: 20px"></div>
+          <div class="danger-modal-btns">
+            <button
+              class="danger-cancel-btn"
+              style="flex: 1"
+              onclick="closeValidationModal()"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset Modal -->
+    <div
+      id="resetModal"
+      style="display: none; position: fixed; inset: 0; z-index: 5000"
+    >
+      <div class="danger-modal-overlay" onclick="closeResetModal(event)">
+        <div class="danger-modal-box" onclick="event.stopPropagation()">
+          <!-- CHANGED: FA warning triangle icon -->
+          <div class="danger-modal-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="danger-modal-title">Reset All Data</div>
+          <div class="danger-modal-desc">
+            This will <strong>permanently delete</strong> all records, accounts,
+            categories, and budgets.<br /><br />
+            Type <strong>DELETE</strong> below to confirm.
+          </div>
+          <input
+            class="danger-confirm-input"
+            id="resetConfirmInput"
+            type="text"
+            placeholder="Type DELETE here"
+            oninput="checkResetInput()"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          />
+          <div class="danger-modal-btns">
+            <button class="danger-cancel-btn" onclick="closeResetModal()">
+              Cancel
+            </button>
+            <button
+              class="danger-confirm-btn"
+              id="resetConfirmBtn"
+              disabled
+              onclick="executeReset()"
+            >
+              Delete Everything
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPDATED: Help Modal -->
+    <div
+      id="helpModal"
+      style="display: none; position: fixed; inset: 0; z-index: 5000"
+    >
+      <div class="danger-modal-overlay" onclick="closeHelpModal(event)">
+        <div
+          class="danger-modal-box"
+          id="helpModalBox"
+          onclick="event.stopPropagation()"
+        >
+          <div class="danger-modal-icon" style="color: var(--gold)">
+            <i class="fa-solid fa-circle-question"></i>
+          </div>
+          <div class="danger-modal-title" style="color: var(--gold)">Help</div>
+          <div class="danger-modal-desc" style="text-align: left">
+            <strong style="color: var(--text-primary)">Getting started:</strong
+            ><br /><br />
+            <span
+              >• Tap <strong style="color: var(--gold)">+</strong> to log
+              income, expense, or transfer</span
+            ><br />
+            <span
+              >• Use
+              <strong style="color: var(--text-primary)">Analysis</strong> to
+              view spending charts</span
+            ><br />
+            <span
+              >• Use
+              <strong style="color: var(--text-primary)">Budgets</strong> to set
+              monthly limits</span
+            ><br />
+            <span
+              >• Use
+              <strong style="color: var(--text-primary)">Accounts</strong> to
+              manage wallets &amp; cards</span
+            ><br />
+            <br />
+            <strong style="color: var(--text-primary)">Need support?</strong
+            ><br />
+            <span>Email: zeke.laguiab@gmail.com</span>
+          </div>
+          <div class="danger-modal-btns">
+            <button
+              class="danger-cancel-btn"
+              style="flex: 1"
+              onclick="closeHelpModal()"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPDATED: Feedback Modal -->
+    <div
+      id="feedbackModal"
+      style="display: none; position: fixed; inset: 0; z-index: 5000"
+    >
+      <div class="danger-modal-overlay" onclick="closeFeedbackModal(event)">
+        <div
+          class="danger-modal-box"
+          id="feedbackModalBox"
+          onclick="event.stopPropagation()"
+        >
+          <div class="danger-modal-icon" style="color: var(--gold)">
+            <i class="fa-solid fa-envelope"></i>
+          </div>
+          <div class="danger-modal-title" style="color: var(--gold)">
+            Send Feedback
+          </div>
+          <div class="danger-modal-desc">
+            We'd love to hear from you!<br />Tapping below will open your email
+            app with a pre-filled message.
+          </div>
+          <div class="danger-modal-btns">
+            <button class="danger-cancel-btn" onclick="closeFeedbackModal()">
+              Cancel
+            </button>
+            <button
+              class="danger-confirm-btn"
+              onclick="sendFeedbackEmail()"
+              style="background: var(--gold)"
+            >
+              <i class="fa-solid fa-paper-plane"></i>&nbsp;Open Email
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div
+      class="modal"
+      id="inputModal"
+      onclick="if (event.target === this) closeModal();"
+    >
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-header-left">
+            <!-- CHANGED: FA chevron-left replaces ‹ text -->
+            <button class="modal-close" onclick="closeModal()">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="modal-title" id="modalTitle">Add Transaction</div>
+          </div>
+          <div class="modal-header-right">
+            <button class="modal-save-btn" onclick="saveTransaction()">
+              SAVE
+            </button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="transaction-tabs">
+            <!-- CHANGED: FA icons replace emoji in transaction tabs -->
+            <button
+              class="tab-btn active"
+              onclick="setTransactionTypeDirect('income')"
+            >
+              <i
+                class="fa-solid fa-arrow-trend-up"
+                style="margin-right: 4px"
+              ></i
+              >INCOME
+            </button>
+            <button
+              class="tab-btn"
+              onclick="setTransactionTypeDirect('expense')"
+            >
+              <i
+                class="fa-solid fa-arrow-trend-down"
+                style="margin-right: 4px"
+              ></i
+              >EXPENSE
+            </button>
+            <button
+              class="tab-btn"
+              onclick="setTransactionTypeDirect('transfer')"
+            >
+              <i class="fa-solid fa-right-left" style="margin-right: 4px"></i
+              >TRANSFER
+            </button>
+          </div>
+          <div class="form-content">
+            <div id="incomeExpenseForm">
+              <div class="form-row-split">
+                <div class="form-group">
+                  <label class="form-label">From Account</label>
+                  <!-- UPDATED: ID on selected-item-left so JS injects icon+name directly -->
+                  <div
+                    class="selected-item"
+                    id="txnAccountDisplay"
+                    onclick="showAccountSelectorMobile('income')"
+                  >
+                    <div class="selected-item-left" id="txnAccountText">
+                      <span class="selected-item-placeholder"
+                        >Select Account</span
+                      >
+                    </div>
+                    <span class="selected-item-arrow">&#8250;</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Category</label>
+                  <!-- UPDATED: ID on selected-item-left -->
+                  <div
+                    class="selected-item"
+                    id="txnCategoryDisplay"
+                    onclick="showCategorySelectorMobile(currentTransactionType)"
+                  >
+                    <div class="selected-item-left" id="txnCategoryText">
+                      <span class="selected-item-placeholder"
+                        >Select Category</span
+                      >
+                    </div>
+                    <span class="selected-item-arrow">&#8250;</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="transferForm" style="display: none">
+              <div class="form-row-split">
+                <div class="form-group">
+                  <label class="form-label">From Account</label>
+                  <!-- UPDATED: ID on selected-item-left -->
+                  <div
+                    class="selected-item"
+                    id="transferFromDisplay"
+                    onclick="showAccountSelectorMobile('transfer-from')"
+                  >
+                    <div class="selected-item-left" id="transferFromText">
+                      <span class="selected-item-placeholder"
+                        >Select Account</span
+                      >
+                    </div>
+                    <span class="selected-item-arrow">&#8250;</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">To Account</label>
+                  <!-- UPDATED: ID on selected-item-left -->
+                  <div
+                    class="selected-item"
+                    id="transferToDisplay"
+                    onclick="showAccountSelectorMobile('transfer-to')"
+                  >
+                    <div class="selected-item-left" id="transferToText">
+                      <span class="selected-item-placeholder"
+                        >Select Account</span
+                      >
+                    </div>
+                    <span class="selected-item-arrow">&#8250;</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-row full">
+              <div class="form-group">
+                <label class="form-label">Notes (Optional)</label>
+                <textarea
+                  class="form-input notes-area"
+                  id="txnNotes"
+                  placeholder="Add notes..."
+                ></textarea>
+              </div>
+            </div>
+            <!-- Calculator -->
+            <div class="calculator">
+              <div class="calculator-display" id="modalCalcDisplay">0</div>
+              <div class="calculator-buttons">
+                <!-- Row 1: C  ⌫  /  × -->
+                <button class="calc-btn clear" onclick="clearModalCalc()">
+                  C
+                </button>
+                <button
+                  class="calc-btn backspace"
+                  onclick="backspaceModalCalc()"
+                >
+                  <i class="fa-solid fa-delete-left"></i>
+                </button>
+                <button
+                  class="calc-btn operator"
+                  onclick="appendModalCalc('/')"
+                >
+                  ÷
+                </button>
+                <button
+                  class="calc-btn operator"
+                  onclick="appendModalCalc('*')"
+                >
+                  ×
+                </button>
+                <!-- Row 2: 7  8  9  − -->
+                <button class="calc-btn" onclick="appendModalCalc('7')">
+                  7
+                </button>
+                <button class="calc-btn" onclick="appendModalCalc('8')">
+                  8
+                </button>
+                <button class="calc-btn" onclick="appendModalCalc('9')">
+                  9
+                </button>
+                <button
+                  class="calc-btn operator"
+                  onclick="appendModalCalc('-')"
+                >
+                  −
+                </button>
+                <!-- Row 3: 4  5  6  + -->
+                <button class="calc-btn" onclick="appendModalCalc('4')">
+                  4
+                </button>
+                <button class="calc-btn" onclick="appendModalCalc('5')">
+                  5
+                </button>
+                <button class="calc-btn" onclick="appendModalCalc('6')">
+                  6
+                </button>
+                <button
+                  class="calc-btn operator"
+                  onclick="appendModalCalc('+')"
+                >
+                  +
+                </button>
+                <!-- Row 4: 1  2  3  | = spans rows 4+5 -->
+                <button class="calc-btn" onclick="appendModalCalc('1')">
+                  1
+                </button>
+                <button class="calc-btn" onclick="appendModalCalc('2')">
+                  2
+                </button>
+                <button class="calc-btn" onclick="appendModalCalc('3')">
+                  3
+                </button>
+                <button
+                  class="calc-btn equals"
+                  onclick="calculateModalResult()"
+                >
+                  =
+                </button>
+                <!-- Row 5: 0  .  00  | = (cont.) -->
+                <button class="calc-btn" onclick="appendModalCalc('0')">
+                  0
+                </button>
+                <button class="calc-btn" onclick="appendModalCalc('.')">
+                  .
+                </button>
+                <button class="calc-btn" onclick="appendModalCalc('00')">
+                  00
+                </button>
+              </div>
+            </div>
+            <div
+              class="form-row"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px"
+            >
+              <div class="form-group">
+                <input type="date" class="form-input" id="txnDate" />
+              </div>
+              <div class="form-group">
+                <input type="time" class="form-input" id="txnTime" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account/Category Selector Sheet -->
+    <div
+      class="account-selector-modal"
+      id="accountSelectorModal"
+      onclick="if (event.target === this) closeAccountSelector();"
+    >
+      <div class="account-selector-content">
+        <div class="account-selector-header">
+          <div class="account-selector-title" id="selectorTitle">
+            Select Account
+          </div>
+          <!-- CHANGED: FA xmark icon replaces ✕ -->
+          <button
+            class="account-selector-close"
+            onclick="closeAccountSelector()"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="account-list" id="accountListContainer"></div>
+      </div>
+    </div>
+
+    <!-- Budget Category Picker Sheet -->
+    <div
+      class="account-selector-modal"
+      id="budgetCategorySheet"
+      onclick="if (event.target === this) closeBudgetCategorySheet();"
+    >
+      <div class="account-selector-content" style="max-height: 82vh">
+        <div class="account-selector-header">
+          <div class="account-selector-title">Select Category</div>
+          <!-- CHANGED: FA xmark icon -->
+          <button
+            class="account-selector-close"
+            onclick="closeBudgetCategorySheet()"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div style="padding: 14px 16px 16px">
+          <div class="budget-category-grid" id="budgetCategoryGrid"></div>
+          <div
+            id="budgetCatNone"
+            style="
+              display: none;
+              color: var(--text-muted);
+              font-size: 13px;
+              padding: 10px 0;
+              text-align: center;
+            "
+          >
+            No expense categories found. Add one first.
+          </div>
+          <button class="bcs-add-btn" onclick="openCategoryFromBudgetSheet()">
+            + Add Expense Category
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Modal -->
+    <div
+      class="modal"
+      id="accountModal"
+      onclick="if (event.target === this) closeAccountModal(event);"
+    >
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title" id="accountModalTitle">Add New Account</div>
+          <!-- CHANGED: FA xmark replaces ✕ -->
+          <button class="modal-close" onclick="closeAccountModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div style="padding: 20px">
+            <div class="form-group">
+              <label class="form-label">Account Name</label>
+              <input
+                type="text"
+                class="form-input"
+                id="accountName"
+                placeholder="e.g., BPI, Cash, Savings"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Initial Balance</label>
+              <input
+                type="number"
+                class="form-input"
+                id="accountBalance"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+              <div style="font-size: 11px; color: #888; margin-top: 4px">
+                Starting balance before any transactions
+              </div>
+            </div>
+            <!-- UPDATED: account icon grid — PNG selection replaces emoji picker -->
+            <div class="form-group">
+              <label class="form-label">Account Icon</label>
+              <input type="hidden" id="accountIcon" />
+              <div class="acct-icon-grid" id="accountIconGrid"></div>
+              <div class="acct-icon-hint">Select an icon for this account</div>
+            </div>
+            <div class="form-buttons">
+              <button class="btn-secondary" onclick="closeAccountModal()">
+                CANCEL
+              </button>
+              <button class="btn-primary" onclick="saveAccount()">SAVE</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div
+      class="modal"
+      id="categoryModal"
+      onclick="if (event.target === this) closeCategoryModal(event);"
+    >
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title" id="categoryModalTitle">Add Category</div>
+          <!-- CHANGED: FA xmark replaces ✕ -->
+          <button class="modal-close" onclick="closeCategoryModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div style="padding: 20px">
+            <div class="form-group">
+              <label class="form-label">Category Name</label>
+              <input
+                type="text"
+                class="form-input"
+                id="categoryName"
+                placeholder="Category name"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category Icon (emoji)</label>
+              <input
+                type="text"
+                class="form-input"
+                id="categoryIcon"
+                placeholder="Select icon"
+              />
+              <div class="emoji-picker-scroll" id="emojiPicker"></div>
+            </div>
+            <!-- FIXED: Type field removed from UI; set automatically by openCategoryModal(type) -->
+            <input type="hidden" id="categoryType" />
+            <div class="form-buttons">
+              <button class="btn-secondary" onclick="closeCategoryModal()">
+                CANCEL
+              </button>
+              <button class="btn-primary" onclick="saveCategory()">SAVE</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget Modal -->
+    <div
+      class="modal"
+      id="budgetModal"
+      onclick="if (event.target === this) closeBudgetModal(event);"
+    >
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-header-left">
+            <!-- CHANGED: FA chevron-left replaces ‹ -->
+            <button class="modal-close" onclick="closeBudgetModal()">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="modal-title" id="budgetModalTitle">Add Budget</div>
+          </div>
+          <div class="modal-header-right">
+            <button class="modal-save-btn" onclick="saveBudget()">SAVE</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div style="padding: 20px">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <input type="hidden" id="budgetCategory" />
+              <div
+                class="account-selector-mobile"
+                id="budgetCategoryDisplay"
+                onclick="openBudgetCategorySheet()"
+              >
+                <span id="budgetCategoryText">Select Category</span>
+                <span style="color: var(--gold)">&#8250;</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Limit Amount</label>
+              <input
+                type="number"
+                class="form-input"
+                id="budgetLimit"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Month</label>
+              <input type="month" class="form-input" id="budgetMonth" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div
+      class="modal"
+      id="searchModal"
+      onclick="if (event.target === this) closeSearchModal(event);"
+    >
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-header-left">
+            <!-- CHANGED: FA chevron-left replaces ‹ -->
+            <button class="modal-close" onclick="closeSearchModal()">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="modal-title">Search Transactions</div>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="form-content">
+            <div class="form-group">
+              <input
+                type="text"
+                class="form-input"
+                id="searchInput"
+                placeholder="Search by amount, category, account, or notes..."
+                oninput="performSearch()"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Filter by Type</label>
+              <select
+                class="form-select"
+                id="searchTypeFilter"
+                onchange="performSearch()"
+              >
+                <option value="all">All Types</option>
+                <option value="income">Income Only</option>
+                <option value="expense">Expense Only</option>
+                <option value="transfer">Transfer Only</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date Range</label>
+              <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px"
+              >
+                <input
+                  type="date"
+                  class="form-input"
+                  id="searchDateFrom"
+                  onchange="performSearch()"
+                />
+                <input
+                  type="date"
+                  class="form-input"
+                  id="searchDateTo"
+                  onchange="performSearch()"
+                />
+              </div>
+            </div>
+            <div id="searchResults" style="margin-top: 20px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANGED: FAB uses FA plus icon instead of text + -->
+    <button class="fab" onclick="openModal()">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <div
+      id="copyBudgetModal"
+      style="display: none; position: fixed; inset: 0; z-index: 4000"
+    >
+      <div class="copy-modal-overlay" onclick="closeCopyBudgetModal(event)">
+        <div class="copy-modal-sheet" onclick="event.stopPropagation()">
+          <div class="copy-modal-header">
+            <div>
+              <div class="copy-modal-title">Copy Budgets</div>
+              <div
+                style="font-size: 12px; color: #999; margin-top: 3px"
+                id="copyModalSubtitle"
+              >
+                Select categories to copy
+              </div>
+            </div>
+            <!-- CHANGED: FA xmark icon -->
+            <button class="copy-modal-close" onclick="closeCopyBudgetModal()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="copy-modal-actions">
+            <!-- CHANGED: FA icons in action buttons -->
+            <button onclick="copyBudgetSelectAll()">
+              <i class="fa-solid fa-check" style="margin-right: 4px"></i>Select
+              All
+            </button>
+            <button onclick="copyBudgetClearAll()">
+              <i class="fa-solid fa-xmark" style="margin-right: 4px"></i>Clear
+              All
+            </button>
+          </div>
+          <div class="copy-modal-list" id="copyBudgetList"></div>
+          <div class="copy-modal-footer">
+            <button class="copy-cancel-btn" onclick="closeCopyBudgetModal()">
+              Cancel
+            </button>
+            <button class="copy-confirm-btn" onclick="confirmCopyBudgets()">
+              Copy Selected (<span id="copySelectedCount">0</span>)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPDATED: Transactions Detail Modal (Account & Category drill-down) -->
+    <div
+      id="txnDetailModal"
+      style="display: none; position: fixed; inset: 0; z-index: 4500"
+    >
+      <div
+        class="txn-detail-modal-overlay"
+        onclick="closeTxnDetailModal(event)"
+      >
+        <div class="txn-detail-sheet" onclick="event.stopPropagation()">
+          <div class="txn-detail-header">
+            <div class="txn-detail-title" id="txnDetailTitle">Transactions</div>
+            <button class="txn-detail-close" onclick="closeTxnDetailModal()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="txn-detail-body" id="txnDetailBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation — 4 tabs + center FAB add button -->
+    <div class="bottom-nav">
+      <button class="nav-item active" onclick="switchNav('records')">
+        <div class="nav-item-icon"><i class="fa-solid fa-list-ul"></i></div>
+        <div class="nav-item-label">Records</div>
+      </button>
+      <button class="nav-item" onclick="switchNav('analysis')">
+        <div class="nav-item-icon"><i class="fa-solid fa-chart-pie"></i></div>
+        <div class="nav-item-label">Analysis</div>
+      </button>
+      <!-- CENTER FAB — Add Transaction -->
+      <button class="nav-item nav-fab-center" onclick="openModal()">
+        <div class="nav-item-icon"><i class="fa-solid fa-plus"></i></div>
+      </button>
+      <button class="nav-item" onclick="switchNav('accounts')">
+        <div class="nav-item-icon">
+          <i class="fa-solid fa-building-columns"></i>
+        </div>
+        <div class="nav-item-label">Accounts</div>
+      </button>
+      <button class="nav-item" onclick="switchNav('categories')">
+        <div class="nav-item-icon"><i class="fa-solid fa-tags"></i></div>
+        <div class="nav-item-label">Categories</div>
+      </button>
+    </div>
+
+    <!-- ══ ONBOARDING OVERLAY ══════════════════════════════════════ -->
+    <div id="onboardingOverlay" class="hidden">
+      <!-- Step 1 -->
+      <div class="ob-step active" id="ob-step-1">
+        <img class="ob-logo-img" src="icons/logo-mark.png" alt="Kashi" width="96" height="96" />
+        <div class="ob-logo">Kashi Tracker</div>
+        <div class="ob-logo-sub">Your personal money tracker</div>
+        <!-- FIXED: fa-hand-wave is FA Pro-only and renders blank on free CDN; replaced with fa-hand which is free -->
+        <div class="ob-emoji">
+          <i class="fa-solid fa-hand ob-icon-large"></i>
+        </div>
+        <div class="ob-title">Welcome to Kashi Tracker!</div>
+        <div class="ob-desc">
+          Track your income, expenses, and budgets all in one place. Let's get
+          you set up in a few quick steps.
+        </div>
+        <div class="ob-dots">
+          <div class="ob-dot active"></div>
+          <div class="ob-dot"></div>
+          <div class="ob-dot"></div>
+          <div class="ob-dot"></div>
+        </div>
+        <div class="ob-btn-row">
+          <button class="ob-btn-skip" onclick="skipOnboarding()">Skip</button>
+          <button class="ob-btn-primary" onclick="obNext(2)">
+            Next &#8594;
+          </button>
+        </div>
+      </div>
+      <!-- Step 2 -->
+      <div class="ob-step" id="ob-step-2">
+        <!-- CHANGED: FA building-columns replaces 🏦 -->
+        <div class="ob-emoji">
+          <i class="fa-solid fa-building-columns ob-icon-large"></i>
+        </div>
+        <div class="ob-title">Set up your accounts</div>
+        <div class="ob-desc">
+          Add your bank accounts, e-wallets, and cash on hand. Kashi Tracker
+          will track the balance of each one automatically.
+        </div>
+        <div class="ob-dots">
+          <div class="ob-dot"></div>
+          <div class="ob-dot active"></div>
+          <div class="ob-dot"></div>
+          <div class="ob-dot"></div>
+        </div>
+        <div class="ob-btn-row">
+          <button class="ob-btn-skip" onclick="obBack(1)">&#8592; Back</button>
+          <button class="ob-btn-primary" onclick="obNext(3)">
+            Next &#8594;
+          </button>
+        </div>
+      </div>
+      <!-- Step 3 -->
+      <div class="ob-step" id="ob-step-3">
+        <!-- CHANGED: FA receipt replaces 💸 -->
+        <div class="ob-emoji">
+          <i class="fa-solid fa-receipt ob-icon-large"></i>
+        </div>
+        <div class="ob-title">Log your transactions</div>
+        <div class="ob-desc">
+          Tap the <strong style="color: var(--gold)">+</strong> button anytime
+          to add income, expenses, or transfers between accounts. The calculator
+          is built right in!
+        </div>
+        <div class="ob-dots">
+          <div class="ob-dot"></div>
+          <div class="ob-dot"></div>
+          <div class="ob-dot active"></div>
+          <div class="ob-dot"></div>
+        </div>
+        <div class="ob-btn-row">
+          <button class="ob-btn-skip" onclick="obBack(2)">&#8592; Back</button>
+          <button class="ob-btn-primary" onclick="obNext(4)">
+            Next &#8594;
+          </button>
+        </div>
+      </div>
+      <!-- Step 4 -->
+      <div class="ob-step" id="ob-step-4">
+        <!-- CHANGED: FA bullseye replaces 🎯 -->
+        <div class="ob-emoji">
+          <i class="fa-solid fa-bullseye ob-icon-large"></i>
+        </div>
+        <div class="ob-title">Set a budget &amp; stay on track</div>
+        <div class="ob-desc">
+          Create monthly spending limits per category. Kashi Tracker shows your
+          progress so you know exactly where you stand.
+        </div>
+        <div class="ob-dots">
+          <div class="ob-dot"></div>
+          <div class="ob-dot"></div>
+          <div class="ob-dot"></div>
+          <div class="ob-dot active"></div>
+        </div>
+        <div class="ob-btn-row">
+          <button class="ob-btn-skip" onclick="obBack(3)">&#8592; Back</button>
+          <button class="ob-btn-primary" onclick="finishOnboarding()">
+            Get Started
+            <i class="fa-solid fa-rocket" style="margin-left: 4px"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CURRENCY MODAL ═════════════════════════════════════════ -->
+    <div
+      id="currencyModal"
+      style="display: none; position: fixed; inset: 0; z-index: 5000"
+    >
+      <div class="danger-modal-overlay" onclick="closeCurrencyModal(event)">
+        <div class="danger-modal-box" onclick="event.stopPropagation()">
+          <!-- CHANGED: FA exchange icon replaces 💱 -->
+          <div class="danger-modal-icon">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+          </div>
+          <div class="danger-modal-title">Base Currency</div>
+          <div
+            style="
+              font-size: 13px;
+              color: var(--text-muted);
+              margin-bottom: 14px;
+              text-align: center;
+            "
+          >
+            Sets the symbol shown throughout the app.<br />All amounts are
+            stored in this currency.
+          </div>
+          <div
+            style="width: 100%; max-height: 300px; overflow-y: auto"
+            id="currencyList"
+          ></div>
+          <div class="danger-modal-btns" style="margin-top: 12px">
+            <button
+              class="danger-cancel-btn"
+              style="flex: 1"
+              onclick="closeCurrencyModal()"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ── Back button / Escape: close the top-most sheet, modal or sidebar ──
+      // Browsers & installed PWAs fire popstate on back. We keep one sentinel
+      // history entry so a back press closes UI first instead of leaving the app.
+      (function () {
+        var SENTINEL = "kashi-app";
+
+        function pushSentinel() {
+          history.pushState({ kashi: SENTINEL }, "", location.pathname + location.search);
+        }
+        if (!history.state || history.state.kashi !== SENTINEL) pushSentinel();
+
+        // Returns true if something was closed
+        function closeTopLayer() {
+          var sidebar = document.getElementById("sidebar");
+          if (sidebar && sidebar.classList.contains("active")) {
+            closeSidebar();
+            return true;
+          }
+          var fixedModalIds = [
+            "deleteConfirmModal", "validationModal", "resetModal", "helpModal",
+            "feedbackModal", "currencyModal", "txnDetailModal", "copyBudgetModal",
+          ];
+          for (var i = 0; i < fixedModalIds.length; i++) {
+            var m = document.getElementById(fixedModalIds[i]);
+            if (m && m.style.display === "block") {
+              m.style.display = "none";
+              if (typeof allowBodyScroll === "function") allowBodyScroll();
+              return true;
+            }
+          }
+          var sheet = document.getElementById("accountSelectorModal");
+          if (sheet && sheet.classList.contains("active")) {
+            closeAccountSelector();
+            return true;
+          }
+          var budgetSheet = document.getElementById("budgetCategorySheet");
+          if (budgetSheet && budgetSheet.classList.contains("active")) {
+            closeBudgetCategorySheet();
+            return true;
+          }
+          var ob = document.getElementById("onboardingOverlay");
+          if (ob && !ob.classList.contains("hidden")) {
+            finishOnboarding();
+            return true;
+          }
+          var activeModal = document.querySelector(".modal.active");
+          if (activeModal) {
+            var closeBtn = activeModal.querySelector(".modal-close");
+            if (closeBtn) closeBtn.click();
+            else activeModal.classList.remove("active");
+            var im = document.getElementById("inputModal");
+            if (im) {
+              im.style.opacity = "1";
+              im.style.pointerEvents = "auto";
+            }
+            return true;
+          }
+          return false;
+        }
+
+        window.addEventListener("popstate", function () {
+          // Always re-arm so the next back press is caught too.
+          // If nothing was open, the user is simply staying on the home screen.
+          closeTopLayer();
+          pushSentinel();
+        });
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") {
+            if (closeTopLayer()) e.preventDefault();
+          }
+        });
+      })();
+
+      // ── Bottom spacing: measure the nav bar once and expose it as a CSS var ──
+      function fixBottomSpace() {
+        var nav = document.querySelector(".bottom-nav");
+        if (!nav) return;
+        nav.style.paddingBottom = "";
+        setTimeout(function () {
+          requestAnimationFrame(function () {
+            var navH = nav.getBoundingClientRect().height;
+            if (navH > 0) {
+              var clamped = Math.min(Math.max(navH, 56), 80);
+              document.documentElement.style.setProperty(
+                "--bottom-nav-height", clamped + 10 + "px"
+              );
+            }
+          });
+        }, 300);
+      }
+      window.addEventListener("load", fixBottomSpace, false);
+
+      // ── Service worker (offline + installable) ──
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("sw.js").catch(function () {});
+        });
+      }
+    </script>
+    <script src="js/chart.min.js"></script>
+    <script src="js/script.js" type="text/javascript" charset="utf-8"></script>
+  </body>
+</html>
