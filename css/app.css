@@ -11346,86 +11346,100 @@ body.light-mode .category-breakdown::-webkit-scrollbar-thumb:hover {
 .sidebar-header { display: flex; align-items: center; }
 .ob-logo-img { display: block; width: 180px; height: 180px; margin: 0 auto 10px; border-radius: 36px; box-shadow: 0 6px 24px rgba(122, 90, 76, 0.22); }
 
-/* ══ Search Transactions page ══ */
-#searchModal .modal-body { padding: 0 !important; }
-#searchModal .search-page {
-  padding: 14px 16px calc(24px + env(safe-area-inset-bottom, 0px));
-  max-width: 640px;
-  margin: 0 auto;
+/* ══ Search — modal card ══ */
+#searchModal.modal {
+  align-items: flex-start !important; justify-content: center !important;
+  padding: calc(env(safe-area-inset-top, 0px) + 56px) 14px 14px !important;
+  background: rgba(20, 14, 10, 0.5) !important;
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
 }
+#searchModal .search-card {
+  width: 100% !important; max-width: 440px !important;
+  height: auto !important; max-height: calc(100dvh - 80px - env(safe-area-inset-top, 0px)) !important;
+  margin: 0 !important; padding: 0 !important;
+  display: flex !important; flex-direction: column !important;
+  border-radius: 24px !important; overflow: hidden !important;
+  background: var(--bg-deep) !important;
+  border: 1.5px solid var(--glass-border) !important;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3) !important;
+  animation: searchCardIn 0.22s ease !important;
+}
+@keyframes searchCardIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+#searchModal .search-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 16px 4px 20px; flex-shrink: 0;
+}
+#searchModal .search-card-title { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+#searchModal .search-card-close {
+  width: 36px; height: 36px; border-radius: 12px; border: 0; cursor: pointer;
+  background: var(--glass); color: var(--text-secondary); font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+#searchModal .search-card-controls { padding: 10px 16px 14px; flex-shrink: 0; }
 
-/* search field with icon */
-#searchModal .search-field { position: relative; margin-bottom: 12px; }
+#searchModal .search-field { position: relative; }
 #searchModal .search-field-icon {
-  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-  font-size: 15px; color: var(--text-muted); pointer-events: none;
+  position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; color: var(--text-muted); pointer-events: none;
 }
 #searchModal .search-field .form-input {
-  width: 100%; height: 50px; padding: 0 16px 0 44px !important;
-  border-radius: 16px !important; font-size: 16px !important;
+  width: 100%; height: 46px; box-sizing: border-box; padding: 0 14px 0 40px !important;
+  border-radius: 14px !important; font-size: 16px !important;
   border: 1.5px solid var(--glass-border) !important;
   -webkit-appearance: none; appearance: none;
 }
 #searchModal .search-field .form-input:focus { border-color: var(--gold) !important; }
 #searchModal .search-field .form-input::-webkit-search-cancel-button { -webkit-appearance: none; }
 
-/* filters */
-#searchModal .search-filters {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px 10px;
-  margin-bottom: 18px;
+#searchModal .search-chips { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; scrollbar-width: none; }
+#searchModal .search-chips::-webkit-scrollbar { display: none; }
+#searchModal .search-chip {
+  flex: 0 0 auto; height: 34px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+  font: 600 13px/1 inherit; font-family: inherit;
+  border: 1.5px solid var(--glass-border); background: transparent; color: var(--text-secondary);
 }
-#searchModal .search-filter { min-width: 0; }
-#searchModal .search-filter--full { grid-column: 1 / -1; }
-#searchModal .search-filter .form-label {
-  display: block; margin: 0 0 6px 4px !important;
-  text-transform: uppercase; font-size: 11px !important;
-  letter-spacing: 0.6px !important; color: var(--text-muted) !important;
-}
-#searchModal .search-filter .form-input,
-#searchModal .search-filter .form-select {
-  width: 100%; min-width: 0; height: 46px; padding: 0 12px !important;
-  border-radius: 14px !important; font-family: inherit !important;
-  font-size: 15px !important; box-sizing: border-box;
-  border: 1.5px solid var(--glass-border) !important;
-  -webkit-appearance: none; appearance: none;
-}
-#searchModal .search-filter .form-input:focus,
-#searchModal .search-filter .form-select:focus { border-color: var(--gold) !important; }
-#searchModal input[type="date"] { text-align: left; display: block; }
-#searchModal input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+#searchModal .search-chip.active { background: var(--gold); border-color: var(--gold); color: #fff; }
 
-/* results */
+#searchModal .search-dates { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+#searchModal .search-dates-sep { font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
+#searchModal .search-dates .form-input {
+  flex: 1 1 0; min-width: 0; width: 100%; height: 42px; box-sizing: border-box;
+  padding: 0 10px !important; border-radius: 12px !important;
+  font-family: inherit !important; font-size: 14px !important;
+  border: 1.5px solid var(--glass-border) !important;
+  -webkit-appearance: none; appearance: none; display: block;
+}
+#searchModal .search-dates .form-input:focus { border-color: var(--gold) !important; }
+body:not(.light-mode) #searchModal input[type="date"] { color-scheme: dark; }
+body.light-mode #searchModal input[type="date"] { color-scheme: light; }
+
+#searchModal .search-card-results {
+  flex: 1 1 auto; min-height: 120px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  border-top: 1.5px solid var(--glass-border); padding: 4px 8px 12px;
+}
 #searchModal #searchResults {
   background: transparent !important; box-shadow: none !important;
   border: 0 !important; padding: 0 !important; margin: 0 !important;
 }
 #searchModal .search-count {
-  font-size: 12px; font-weight: 700; letter-spacing: 0.6px;
-  text-transform: uppercase; color: var(--text-muted);
-  margin: 0 4px 10px;
-}
-#searchModal .search-list {
-  border: 1.5px solid var(--glass-border); border-radius: 18px;
-  background: var(--glass); overflow: hidden;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+  color: var(--text-muted); margin: 10px 10px 4px;
 }
 #searchModal .search-list .transaction-item {
-  flex-wrap: nowrap; gap: 12px; padding: 12px 14px; border-radius: 0;
-  border-bottom: 1px solid var(--glass-border); animation: none;
+  flex-wrap: nowrap; gap: 12px; padding: 10px; border-radius: 14px; animation: none;
 }
-#searchModal .search-list .transaction-item:last-child { border-bottom: 0; }
-#searchModal .search-list .transaction-icon { width: 42px; height: 42px; flex-shrink: 0; }
+#searchModal .search-list .transaction-icon { width: 40px; height: 40px; flex-shrink: 0; }
 #searchModal .search-list .transaction-info { min-width: 0; flex: 1; }
 #searchModal .search-list .transaction-title,
 #searchModal .search-list .transaction-subtitle,
-#searchModal .search-list .transaction-notes {
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-#searchModal .search-list .transaction-right { flex-shrink: 0; align-items: flex-end; }
+#searchModal .search-list .transaction-notes { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#searchModal .search-list .transaction-right { flex-shrink: 0; }
 #searchModal .search-list .transaction-date { white-space: nowrap; }
 
-/* empty state */
-#searchModal #searchResults .empty-state { padding: 48px 16px; text-align: center; }
-#searchModal #searchResults .empty-state p { margin: 12px 0 4px; font-weight: 600; }
-#searchModal #searchResults .empty-hint { font-size: 13px; color: var(--text-muted); }
-body:not(.light-mode) #searchModal input[type="date"] { color-scheme: dark; }
-body.light-mode #searchModal input[type="date"] { color-scheme: light; }
+#searchModal #searchResults .empty-state { padding: 28px 16px; text-align: center; }
+#searchModal #searchResults .empty-state i { font-size: 34px !important; }
+#searchModal #searchResults .empty-state p { margin: 10px 0 4px; font-weight: 600; font-size: 14px; }
+#searchModal #searchResults .empty-hint { font-size: 12px; color: var(--text-muted); }

@@ -1199,54 +1199,49 @@
       id="searchModal"
       onclick="if (event.target === this) closeSearchModal(event);"
     >
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="modal-header-left">
-            <!-- CHANGED: FA chevron-left replaces ‹ -->
-            <button class="modal-close" onclick="closeSearchModal()">
-              <i class="fa-solid fa-chevron-left"></i>
-            </button>
-            <div class="modal-title">Search Transactions</div>
+      <div class="modal-content search-card">
+        <div class="search-card-head">
+          <div class="search-card-title">Search</div>
+          <button class="search-card-close" type="button" onclick="closeSearchModal()" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="search-card-controls">
+          <div class="search-field">
+            <i class="fa-solid fa-magnifying-glass search-field-icon"></i>
+            <input
+              type="search"
+              class="form-input"
+              id="searchInput"
+              placeholder="Amount, category, account, notes"
+              autocomplete="off"
+              oninput="performSearch()"
+            />
+          </div>
+
+          <div class="search-chips" id="searchChips">
+            <button type="button" class="search-chip active" data-type="all" onclick="setSearchType('all')">All</button>
+            <button type="button" class="search-chip" data-type="expense" onclick="setSearchType('expense')">Expense</button>
+            <button type="button" class="search-chip" data-type="income" onclick="setSearchType('income')">Income</button>
+            <button type="button" class="search-chip" data-type="transfer" onclick="setSearchType('transfer')">Transfer</button>
+          </div>
+          <select id="searchTypeFilter" onchange="performSearch()" hidden>
+            <option value="all">All</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+            <option value="transfer">Transfer</option>
+          </select>
+
+          <div class="search-dates">
+            <input type="date" class="form-input" id="searchDateFrom" aria-label="From date" onchange="performSearch()" />
+            <span class="search-dates-sep">to</span>
+            <input type="date" class="form-input" id="searchDateTo" aria-label="To date" onchange="performSearch()" />
           </div>
         </div>
-        <div class="modal-body">
-          <div class="form-content search-page">
-            <div class="search-field">
-              <i class="fa-solid fa-magnifying-glass search-field-icon"></i>
-              <input
-                type="search"
-                class="form-input"
-                id="searchInput"
-                placeholder="Amount, category, account or notes"
-                autocomplete="off"
-                oninput="performSearch()"
-              />
-            </div>
-            <div class="search-filters">
-              <div class="search-filter search-filter--full">
-                <label class="form-label" for="searchTypeFilter">Type</label>
-                <select
-                  class="form-select"
-                  id="searchTypeFilter"
-                  onchange="performSearch()"
-                >
-                  <option value="all">All types</option>
-                  <option value="income">Income only</option>
-                  <option value="expense">Expense only</option>
-                  <option value="transfer">Transfer only</option>
-                </select>
-              </div>
-              <div class="search-filter">
-                <label class="form-label" for="searchDateFrom">From</label>
-                <input type="date" class="form-input" id="searchDateFrom" onchange="performSearch()" />
-              </div>
-              <div class="search-filter">
-                <label class="form-label" for="searchDateTo">To</label>
-                <input type="date" class="form-input" id="searchDateTo" onchange="performSearch()" />
-              </div>
-            </div>
-            <div id="searchResults"></div>
-          </div>
+
+        <div class="search-card-results">
+          <div id="searchResults"></div>
         </div>
       </div>
     </div>

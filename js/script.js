@@ -3870,6 +3870,9 @@ function openSearchModal() {
   preventBodyScroll();
   document.getElementById("searchInput").value = "";
   document.getElementById("searchTypeFilter").value = "all";
+  document
+    .querySelectorAll("#searchChips .search-chip")
+    .forEach((c) => c.classList.toggle("active", c.dataset.type === "all"));
   document.getElementById("searchDateFrom").value = "";
   document.getElementById("searchDateTo").value = "";
   document.getElementById("searchResults").innerHTML =
@@ -3881,7 +3884,6 @@ function openSearchModal() {
 
   // FIXED: Scroll input into view when keyboard appears on mobile
   setTimeout(() => {
-    searchInput.scrollIntoView({ behavior: "smooth", block: "nearest" });
     searchInput.focus(); // Re-focus to ensure keyboard stays open
   }, 300);
 }
@@ -3891,6 +3893,14 @@ function closeSearchModal(event) {
   if (event && event.target !== event.currentTarget) return;
   document.getElementById("searchModal").classList.remove("active");
   allowBodyScroll();
+}
+
+function setSearchType(type) {
+  document.getElementById("searchTypeFilter").value = type;
+  document.querySelectorAll("#searchChips .search-chip").forEach((c) => {
+    c.classList.toggle("active", c.dataset.type === type);
+  });
+  performSearch();
 }
 
 function performSearch() {
