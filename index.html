@@ -1210,49 +1210,42 @@
           </div>
         </div>
         <div class="modal-body">
-          <div class="form-content">
-            <div class="form-group">
+          <div class="form-content search-page">
+            <div class="search-field">
+              <i class="fa-solid fa-magnifying-glass search-field-icon"></i>
               <input
-                type="text"
+                type="search"
                 class="form-input"
                 id="searchInput"
-                placeholder="Search by amount, category, account, or notes..."
+                placeholder="Amount, category, account or notes"
+                autocomplete="off"
                 oninput="performSearch()"
               />
             </div>
-            <div class="form-group">
-              <label class="form-label">Filter by Type</label>
-              <select
-                class="form-select"
-                id="searchTypeFilter"
-                onchange="performSearch()"
-              >
-                <option value="all">All Types</option>
-                <option value="income">Income Only</option>
-                <option value="expense">Expense Only</option>
-                <option value="transfer">Transfer Only</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Date Range</label>
-              <div
-                style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px"
-              >
-                <input
-                  type="date"
-                  class="form-input"
-                  id="searchDateFrom"
+            <div class="search-filters">
+              <div class="search-filter search-filter--full">
+                <label class="form-label" for="searchTypeFilter">Type</label>
+                <select
+                  class="form-select"
+                  id="searchTypeFilter"
                   onchange="performSearch()"
-                />
-                <input
-                  type="date"
-                  class="form-input"
-                  id="searchDateTo"
-                  onchange="performSearch()"
-                />
+                >
+                  <option value="all">All types</option>
+                  <option value="income">Income only</option>
+                  <option value="expense">Expense only</option>
+                  <option value="transfer">Transfer only</option>
+                </select>
+              </div>
+              <div class="search-filter">
+                <label class="form-label" for="searchDateFrom">From</label>
+                <input type="date" class="form-input" id="searchDateFrom" onchange="performSearch()" />
+              </div>
+              <div class="search-filter">
+                <label class="form-label" for="searchDateTo">To</label>
+                <input type="date" class="form-input" id="searchDateTo" onchange="performSearch()" />
               </div>
             </div>
-            <div id="searchResults" style="margin-top: 20px"></div>
+            <div id="searchResults"></div>
           </div>
         </div>
       </div>

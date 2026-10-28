@@ -3939,12 +3939,12 @@ function displaySearchResults(results) {
   const container = document.getElementById("searchResults");
   if (results.length === 0) {
     container.innerHTML =
-      '<div class="empty-state"><i class="fa-solid fa-receipt" style="font-size:48px;opacity:0.35;"></i><p>No transactions found</p></div>';
+      '<div class="empty-state"><i class="fa-solid fa-receipt" style="font-size:48px;opacity:0.35;"></i><p>No transactions found</p><span class="empty-hint">Try a different word or clear the filters</span></div>';
     return;
   }
 
   // FIX: Use CSS variables instead of hardcoded dark-mode hex colours
-  let html = `<div style="margin-bottom:15px;padding:15px 20px;color:var(--text-muted);font-size:13px;background:var(--glass);border-bottom:1px solid var(--glass-border);font-weight:600;">${results.length} result(s) found</div>`;
+  let html = `<div class="search-count">${results.length} ${results.length === 1 ? "result" : "results"}</div><div class="search-list">`;
 
   results.forEach((txn) => {
     const date = new Date(txn.date);
@@ -4005,11 +4005,11 @@ function displaySearchResults(results) {
                         </div>
                         <div class="transaction-right">
                             <div class="transaction-amount ${amountClass}">${txn.type === "expense" ? "-" : txn.type === "income" ? "+" : ""}${getCurrencySymbol()}${fmtNum(txn.amount)}</div>
-                            <div class="transaction-date">${dateStr} ${timeStr}</div>
+                            <div class="transaction-date">${dateStr}</div>
                         </div>
                     </div>`;
   });
-  container.innerHTML = html;
+  container.innerHTML = html + "</div>";
 }
 
 // ── FAB hide-on-scroll ────────────────────────────────────────

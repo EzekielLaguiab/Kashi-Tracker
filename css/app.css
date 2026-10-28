@@ -11345,3 +11345,87 @@ body.light-mode .category-breakdown::-webkit-scrollbar-thumb:hover {
 .header-left { display: flex; align-items: center; }
 .sidebar-header { display: flex; align-items: center; }
 .ob-logo-img { display: block; width: 180px; height: 180px; margin: 0 auto 10px; border-radius: 36px; box-shadow: 0 6px 24px rgba(122, 90, 76, 0.22); }
+
+/* ══ Search Transactions page ══ */
+#searchModal .modal-body { padding: 0 !important; }
+#searchModal .search-page {
+  padding: 14px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* search field with icon */
+#searchModal .search-field { position: relative; margin-bottom: 12px; }
+#searchModal .search-field-icon {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  font-size: 15px; color: var(--text-muted); pointer-events: none;
+}
+#searchModal .search-field .form-input {
+  width: 100%; height: 50px; padding: 0 16px 0 44px !important;
+  border-radius: 16px !important; font-size: 16px !important;
+  border: 1.5px solid var(--glass-border) !important;
+  -webkit-appearance: none; appearance: none;
+}
+#searchModal .search-field .form-input:focus { border-color: var(--gold) !important; }
+#searchModal .search-field .form-input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+/* filters */
+#searchModal .search-filters {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px 10px;
+  margin-bottom: 18px;
+}
+#searchModal .search-filter { min-width: 0; }
+#searchModal .search-filter--full { grid-column: 1 / -1; }
+#searchModal .search-filter .form-label {
+  display: block; margin: 0 0 6px 4px !important;
+  text-transform: uppercase; font-size: 11px !important;
+  letter-spacing: 0.6px !important; color: var(--text-muted) !important;
+}
+#searchModal .search-filter .form-input,
+#searchModal .search-filter .form-select {
+  width: 100%; min-width: 0; height: 46px; padding: 0 12px !important;
+  border-radius: 14px !important; font-family: inherit !important;
+  font-size: 15px !important; box-sizing: border-box;
+  border: 1.5px solid var(--glass-border) !important;
+  -webkit-appearance: none; appearance: none;
+}
+#searchModal .search-filter .form-input:focus,
+#searchModal .search-filter .form-select:focus { border-color: var(--gold) !important; }
+#searchModal input[type="date"] { text-align: left; display: block; }
+#searchModal input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+
+/* results */
+#searchModal #searchResults {
+  background: transparent !important; box-shadow: none !important;
+  border: 0 !important; padding: 0 !important; margin: 0 !important;
+}
+#searchModal .search-count {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.6px;
+  text-transform: uppercase; color: var(--text-muted);
+  margin: 0 4px 10px;
+}
+#searchModal .search-list {
+  border: 1.5px solid var(--glass-border); border-radius: 18px;
+  background: var(--glass); overflow: hidden;
+}
+#searchModal .search-list .transaction-item {
+  flex-wrap: nowrap; gap: 12px; padding: 12px 14px; border-radius: 0;
+  border-bottom: 1px solid var(--glass-border); animation: none;
+}
+#searchModal .search-list .transaction-item:last-child { border-bottom: 0; }
+#searchModal .search-list .transaction-icon { width: 42px; height: 42px; flex-shrink: 0; }
+#searchModal .search-list .transaction-info { min-width: 0; flex: 1; }
+#searchModal .search-list .transaction-title,
+#searchModal .search-list .transaction-subtitle,
+#searchModal .search-list .transaction-notes {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#searchModal .search-list .transaction-right { flex-shrink: 0; align-items: flex-end; }
+#searchModal .search-list .transaction-date { white-space: nowrap; }
+
+/* empty state */
+#searchModal #searchResults .empty-state { padding: 48px 16px; text-align: center; }
+#searchModal #searchResults .empty-state p { margin: 12px 0 4px; font-weight: 600; }
+#searchModal #searchResults .empty-hint { font-size: 13px; color: var(--text-muted); }
+body:not(.light-mode) #searchModal input[type="date"] { color-scheme: dark; }
+body.light-mode #searchModal input[type="date"] { color-scheme: light; }
