@@ -321,7 +321,7 @@ function applyDarkMode(isDark) {
       : '<i class="fa-solid fa-sun"></i>';
   localStorage.setItem("colorMode", isDark ? "dark" : "light");
   // Re-apply theme so logo gradient updates for light/dark
-  const savedTheme = localStorage.getItem("appTheme") || "kashi";
+  const savedTheme = localStorage.getItem("appTheme") || "gold";
   if (typeof applyTheme === "function") applyTheme(savedTheme);
   // Re-render charts so colors update immediately on mode switch
   const analysisSection = document.getElementById("analysis-section");
@@ -4040,8 +4040,7 @@ window.addEventListener("DOMContentLoaded", () => {
 // ── THEMES ────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════
 const THEME_NAMES = {
-  kashi: "Kashi (default)",
-  gold: "Gold",
+  gold: "Gold (default)",
   ocean: "Ocean Blue",
   sakura: "Sakura Pink",
   forest: "Forest Green",
@@ -4050,13 +4049,6 @@ const THEME_NAMES = {
 
 // Per-theme: app title shown in header & sidebar, plus logo gradient colors
 const THEME_META = {
-  kashi: {
-    title: "Kashi",
-    grad1: "#e8b58f",
-    grad2: "#f6d9b8",
-    gradLight1: "#8a5a44",
-    gradLight2: "#b9835f",
-  },
   gold: {
     title: "Kashi Tracker",
     grad1: "#d4af37",
@@ -4153,7 +4145,7 @@ function applyTheme(theme) {
 }
 
 function initTheme() {
-  const saved = localStorage.getItem("appTheme") || "kashi";
+  const saved = localStorage.getItem("appTheme") || "gold";
   applyTheme(saved);
 }
 
