@@ -1,5 +1,7 @@
 // Kashi Tracker — service worker (offline-first app shell)
-const CACHE = "kashi-v1";
+// Code files (html/js/css) are network-first so updates arrive right away;
+// when offline, the cached copy is used. Fonts/images/icons are cache-first.
+const CACHE = "kashi-v8";
 const SHELL = [
   "./", "index.html", "manifest.webmanifest",
   "css/all.min.css", "css/app.css",
@@ -18,7 +20,16 @@ const SHELL = [
 self.addEventListener("install", (e) => {
   e.waitUntil(
     caches.open(CACHE)
-      .then((c) => Promise.all(SHELL.map((u) => c.add(u).catch(() => {}))))
+      .then((c) =>
+        Promise.all(
+          SHELL.map((u) =>
+            // cache:"reload" bypasses the browser HTTP cache so we never store a stale copy
+            fetch(new Request(u, { cache: "reload" }))
+              .then((r) => (r.ok ? c.put(u, r) : null))
+              .catch(() => {})
+          )
+        )
+      )
       .then(() => self.skipWaiting())
   );
 });
@@ -31,22 +42,45 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+function isCode(req, url) {
+  return (
+    req.mode === "navigate" ||
+    /\.(html|js|css|webmanifest)$/.test(url.pathname) ||
+    url.pathname.endsWith("/")
+  );
+}
+
+function networkFirst(req) {
+  const fresh = fetch(new Request(req.url, { cache: "no-cache" })).then((res) => {
+    if (res && res.ok) {
+      const copy = res.clone();
+      caches.open(CACHE).then((c) => c.put(req, copy));
+    }
+    return res;
+  });
+  const timeout = new Promise((_, rej) => setTimeout(rej, 4000));
+  return Promise.race([fresh, timeout]).catch(() =>
+    caches.match(req, { ignoreSearch: true }).then((hit) => hit || caches.match("index.html"))
+  );
+}
+
+function cacheFirst(req) {
+  return caches.match(req, { ignoreSearch: true }).then(
+    (hit) =>
+      hit ||
+      fetch(req).then((res) => {
+        if (res && res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy));
+        }
+        return res;
+      })
+  );
+}
+
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
-  e.respondWith(
-    caches.match(e.request, { ignoreSearch: true }).then((hit) => {
-      const net = fetch(e.request)
-        .then((res) => {
-          if (res && res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(e.request, copy));
-          }
-          return res;
-        })
-        .catch(() => hit || caches.match("index.html"));
-      return hit || net;
-    })
-  );
+  e.respondWith(isCode(e.request, url) ? networkFirst(e.request) : cacheFirst(e.request));
 });

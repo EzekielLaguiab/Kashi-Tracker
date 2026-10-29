@@ -217,7 +217,6 @@
     <input
       type="file"
       id="restoreFileInput"
-      accept=".json,application/json"
       style="display: none"
       onchange="handleRestoreFile(event)"
     />
@@ -1609,8 +1608,17 @@
 
       // ── Service worker (offline + installable) ──
       if ("serviceWorker" in navigator) {
+        var hadController = !!navigator.serviceWorker.controller;
+        var reloaded = false;
+        navigator.serviceWorker.addEventListener("controllerchange", function () {
+          // a newer version just took over: reload once so the page and code match
+          if (hadController && !reloaded) {
+            reloaded = true;
+            location.reload();
+          }
+        });
         window.addEventListener("load", function () {
-          navigator.serviceWorker.register("sw.js").catch(function () {});
+          navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(function () {});
         });
       }
     </script>
