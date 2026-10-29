@@ -306,6 +306,18 @@ window.addEventListener("DOMContentLoaded", () => {
       { passive: true },
     );
   }
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!_fab) _fab = document.querySelector(".fab");
+      if (!_fab) return;
+      const y = window.scrollY || 0;
+      if (y > lastScrollY && y > 80) _fab.classList.add("hide");
+      else _fab.classList.remove("hide");
+      lastScrollY = y;
+    },
+    { passive: true },
+  );
 });
 
 // ── Dark / Light Mode ─────────────────────────────────────────
@@ -356,6 +368,7 @@ function switchRecordsTab(tab) {
   var recBtn = document.getElementById("recTabRecords");
   var budBtn = document.getElementById("recTabBudget");
   if (!recPanel || !budPanel) return;
+  if (!_navigating) _scrollMem[_currentPageKey()] = _getScrollY();
   if (tab === "budget") {
     recPanel.style.display = "none";
     budPanel.style.display = "block";
@@ -369,6 +382,7 @@ function switchRecordsTab(tab) {
     if (budBtn) budBtn.classList.remove("active");
     if (recBtn) recBtn.classList.add("active");
   }
+  if (!_navigating) _setScrollY(_scrollMem[_currentPageKey()] || 0);
 }
 
 function toggleSidebar() {
@@ -431,10 +445,44 @@ function sendFeedbackEmail() {
   }, 250);
 }
 
+// ── Per-page scroll memory ─────────────────────────────────────
+// In the browser / installed app the whole window scrolls (not just
+// .main-container), so each page remembers its own scroll position.
+const _scrollMem = {};
+let _navigating = false;
+function _getScrollY() {
+  const mc = document.querySelector(".main-container");
+  return Math.max(window.scrollY || 0, mc ? mc.scrollTop : 0);
+}
+function _setScrollY(y) {
+  const mc = document.querySelector(".main-container");
+  if (mc) mc.scrollTop = y;
+  window.scrollTo(0, y);
+}
+function _currentPageKey() {
+  const sec = document.querySelector(".section.active");
+  if (!sec) return "records";
+  if (sec.id === "records-section") {
+    const bp = document.getElementById("budgetSubPanel");
+    return bp && bp.style.display === "block" ? "budgets" : "records";
+  }
+  return sec.id;
+}
+
 function showSection(section) {
-  // FIX: scroll the main container back to top when switching pages
-  const _mc = document.querySelector(".main-container");
-  if (_mc) _mc.scrollTop = 0;
+  _scrollMem[_currentPageKey()] = _getScrollY();
+  _navigating = true;
+  try {
+    _showSectionCore(section);
+  } finally {
+    _navigating = false;
+  }
+  _setScrollY(_scrollMem[_currentPageKey()] || 0);
+  const fab = document.querySelector(".fab");
+  if (fab) fab.classList.remove("hide");
+}
+
+function _showSectionCore(section) {
   document
     .querySelectorAll(".section")
     .forEach((s) => s.classList.remove("active"));
