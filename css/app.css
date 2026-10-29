@@ -11443,3 +11443,6 @@ body.light-mode #searchModal input[type="date"] { color-scheme: light; }
 #searchModal #searchResults .empty-state i { font-size: 34px !important; }
 #searchModal #searchResults .empty-state p { margin: 10px 0 4px; font-weight: 600; font-size: 14px; }
 #searchModal #searchResults .empty-hint { font-size: 12px; color: var(--text-muted); }
+
+/* Help dialog: scroll if the content is taller than the screen */
+#helpModalBox { max-height: 86dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; }

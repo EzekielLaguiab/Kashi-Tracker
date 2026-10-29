@@ -1,7 +1,7 @@
 // Kashi Tracker — service worker (offline-first app shell)
 // Code files (html/js/css) are network-first so updates arrive right away;
 // when offline, the cached copy is used. Fonts/images/icons are cache-first.
-const CACHE = "kashi-v8";
+const CACHE = "kashi-v1";
 const SHELL = [
   "./", "index.html", "manifest.webmanifest",
   "css/all.min.css", "css/app.css",
