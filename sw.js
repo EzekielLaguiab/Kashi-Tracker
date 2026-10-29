@@ -1,5 +1,5 @@
 // Kashi Tracker — service worker (offline-first app shell)
-const CACHE = "kashi-v6";
+const CACHE = "kashi-v7";
 const SHELL = [
   "./", "index.html", "manifest.webmanifest",
   "css/all.min.css", "css/app.css",
@@ -16,7 +16,11 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => Promise.all(SHELL.map((u) => c.add(u).catch(() => {}))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (e) => {

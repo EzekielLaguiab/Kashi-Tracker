@@ -14,3 +14,11 @@ Walang build step. Static files lang — i-host sa kahit anong HTTPS static host
 
 ## Pag nag-update ka ng code
 Palitan ang `CACHE = "kashi-v4"` sa `sw.js` (hal. `kashi-v4`) para mag-refresh ang cache ng users.
+
+## Backup / Restore
+Sidebar → **Backup Data** nagda-download ng `Kashi-Backup-YYYY-MM-DD.json`.
+**Restore Data** → piliin ang file. Minemerge ito sa current data (duplicates nilalaktawan), kaya safe i-restore ulit.
+Tumatanggap din ng JSON na galing sa lumang Kashi export.
+
+## Offline
+Pagkatapos ng unang load online, naka-cache na lahat ng files (app, fonts, icons) at gumagana na kahit walang internet.

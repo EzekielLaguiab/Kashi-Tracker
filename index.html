@@ -84,6 +84,24 @@
         <!-- 1. Data Management -->
         <div class="sidebar-section">
           <div class="sidebar-section-title">Data</div>
+          <button
+            class="sidebar-item"
+            onclick="
+              backupData();
+              closeSidebar();
+            "
+          >
+            <i class="fa-solid fa-download"></i>Backup Data
+          </button>
+          <button
+            class="sidebar-item"
+            onclick="
+              triggerRestore();
+              closeSidebar();
+            "
+          >
+            <i class="fa-solid fa-upload"></i>Restore Data
+          </button>
           <!-- UPDATED: Reset All Data moved from Preferences to sidebar -->
           <button
             class="sidebar-item sidebar-reset-btn"
@@ -195,6 +213,14 @@
         </div>
       </div>
     </div>
+
+    <input
+      type="file"
+      id="restoreFileInput"
+      accept=".json,application/json"
+      style="display: none"
+      onchange="handleRestoreFile(event)"
+    />
 
     <div class="main-container">
       <!-- Records -->

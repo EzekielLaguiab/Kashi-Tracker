@@ -3758,6 +3758,135 @@ function executeReset() {
   ]);
 }
 
+// ── Backup & Restore ────────────────────────────────────────
+function backupData() {
+  updateAccountBalances();
+  const data = {
+    exportedAt: new Date().toISOString(),
+    appVersion: "Kashi Tracker v2",
+    transactions,
+    accounts: accounts.map((a) => ({
+      id: a.id,
+      name: a.name,
+      icon: a.icon,
+      initialBalance: typeof a.initialBalance === "number" ? a.initialBalance : 0,
+      balance: typeof a.balance === "number" ? a.balance : 0,
+    })),
+    incomeCategories,
+    expenseCategories,
+    budgets,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const stamp = new Date().toLocaleDateString("en-CA", { timeZone: PH_TZ });
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "Kashi-Backup-" + stamp + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  showNotification(
+    '<i class="fa-solid fa-download"></i>',
+    "Backup Saved",
+    [transactions.length + " transaction(s) backed up", "Check your Downloads folder"],
+  );
+}
+
+function triggerRestore() {
+  const input = document.getElementById("restoreFileInput");
+  input.value = "";
+  input.click();
+}
+
+function restoreError(msg) {
+  showNotification('<i class="fa-solid fa-triangle-exclamation"></i>', "Restore Failed", [msg]);
+}
+
+function handleRestoreFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onerror = () => restoreError("Could not read the file. Please try again.");
+  reader.onload = (e) => {
+    let data;
+    try {
+      data = JSON.parse(e.target.result);
+    } catch (err) {
+      return restoreError("That is not a valid Kashi backup file.");
+    }
+    if (!data || typeof data !== "object" || !Array.isArray(data.transactions)) {
+      return restoreError("This file does not look like a Kashi backup.");
+    }
+
+    const valid = (t) =>
+      t && ["id", "type", "amount", "date"].every((k) => k in t) &&
+      ["income", "expense", "transfer"].includes(t.type) &&
+      typeof t.amount === "number" && t.amount >= 0;
+    const validTxns = data.transactions.filter(valid);
+    const invalidCount = data.transactions.length - validTxns.length;
+    const existingIds = new Set(transactions.map((t) => t.id));
+    const newTxns = validTxns.filter((t) => !existingIds.has(t.id));
+    const dupeCount = validTxns.length - newTxns.length;
+    transactions = [...transactions, ...newTxns];
+
+    let newAccounts = 0, updatedAccounts = 0;
+    if (Array.isArray(data.accounts)) {
+      data.accounts.forEach((imp) => {
+        if (!imp || !imp.name) return;
+        const initial = typeof imp.initialBalance === "number" ? imp.initialBalance : 0;
+        const balance = typeof imp.balance === "number" ? imp.balance : initial;
+        const exists = accounts.find(
+          (a) => a.id === imp.id || a.name.toLowerCase() === imp.name.toLowerCase(),
+        );
+        if (exists) {
+          exists.initialBalance = initial;
+          exists.icon = imp.icon || exists.icon;
+          updatedAccounts++;
+        } else {
+          accounts.push({
+            id: imp.id || Date.now() + Math.random(),
+            name: imp.name,
+            icon: imp.icon || "Cash.png",
+            initialBalance: initial,
+            balance,
+          });
+          newAccounts++;
+        }
+      });
+    }
+    const mergeCats = (list, incoming, fallbackIcon) => {
+      if (!Array.isArray(incoming)) return;
+      incoming.forEach((c) => {
+        if (!c || !c.name) return;
+        if (!list.find((x) => x.name.toLowerCase() === c.name.toLowerCase()))
+          list.push({ id: c.id || Date.now() + Math.random(), name: c.name, icon: c.icon || fallbackIcon });
+      });
+    };
+    mergeCats(incomeCategories, data.incomeCategories, "💵");
+    mergeCats(expenseCategories, data.expenseCategories, "💰");
+    if (Array.isArray(data.budgets))
+      data.budgets.forEach((b) => {
+        if (b && !budgets.find((x) => x.category === b.category && x.month === b.month))
+          budgets.push(b);
+      });
+
+    updateAccountBalances();
+    saveData();
+    updateUI();
+
+    const details = [newTxns.length + " transaction(s) restored"];
+    if (dupeCount > 0) details.push(dupeCount + " duplicate(s) skipped");
+    if (invalidCount > 0) details.push(invalidCount + " invalid record(s) skipped");
+    if (newAccounts > 0) details.push(newAccounts + " new account(s) added");
+    if (updatedAccounts > 0) details.push(updatedAccounts + " account(s) updated");
+    showNotification('<i class="fa-solid fa-upload"></i>', "Restore Complete", details);
+  };
+  reader.readAsText(file);
+}
+
 // ── Bulk Delete ───────────────────────────────────────────────
 function toggleBulkMode() {
   if (bulkMode) exitBulkMode();
