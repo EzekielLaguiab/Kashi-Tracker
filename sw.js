@@ -1,5 +1,5 @@
 // Kashi Tracker — service worker (offline-first app shell)
-const CACHE = "kashi-v7";
+const CACHE = "kashi-v1";
 const SHELL = [
   "./", "index.html", "manifest.webmanifest",
   "css/all.min.css", "css/app.css",
