@@ -368,7 +368,6 @@ function switchRecordsTab(tab) {
   var recBtn = document.getElementById("recTabRecords");
   var budBtn = document.getElementById("recTabBudget");
   if (!recPanel || !budPanel) return;
-  if (!_navigating) _scrollMem[_currentPageKey()] = _getScrollY();
   if (tab === "budget") {
     recPanel.style.display = "none";
     budPanel.style.display = "block";
@@ -382,7 +381,7 @@ function switchRecordsTab(tab) {
     if (budBtn) budBtn.classList.remove("active");
     if (recBtn) recBtn.classList.add("active");
   }
-  if (!_navigating) _setScrollY(_scrollMem[_currentPageKey()] || 0);
+  _scrollToTop();
 }
 
 function toggleSidebar() {
@@ -445,39 +444,18 @@ function sendFeedbackEmail() {
   }, 250);
 }
 
-// ── Per-page scroll memory ─────────────────────────────────────
+// ── Scroll reset ───────────────────────────────────────────────
 // In the browser / installed app the whole window scrolls (not just
-// .main-container), so each page remembers its own scroll position.
-const _scrollMem = {};
-let _navigating = false;
-function _getScrollY() {
+// .main-container), so every page switch scrolls back to the top.
+function _scrollToTop() {
   const mc = document.querySelector(".main-container");
-  return Math.max(window.scrollY || 0, mc ? mc.scrollTop : 0);
-}
-function _setScrollY(y) {
-  const mc = document.querySelector(".main-container");
-  if (mc) mc.scrollTop = y;
-  window.scrollTo(0, y);
-}
-function _currentPageKey() {
-  const sec = document.querySelector(".section.active");
-  if (!sec) return "records";
-  if (sec.id === "records-section") {
-    const bp = document.getElementById("budgetSubPanel");
-    return bp && bp.style.display === "block" ? "budgets" : "records";
-  }
-  return sec.id;
+  if (mc) mc.scrollTop = 0;
+  window.scrollTo(0, 0);
 }
 
 function showSection(section) {
-  _scrollMem[_currentPageKey()] = _getScrollY();
-  _navigating = true;
-  try {
-    _showSectionCore(section);
-  } finally {
-    _navigating = false;
-  }
-  _setScrollY(_scrollMem[_currentPageKey()] || 0);
+  _showSectionCore(section);
+  _scrollToTop();
   const fab = document.querySelector(".fab");
   if (fab) fab.classList.remove("hide");
 }
@@ -3509,40 +3487,50 @@ function updateBudgets() {
 }
 
 // ── Accounts ──────────────────────────────────────────────────
-let accountSortMode = "default"; // 'default' | 'az' | 'za'
+// Sort mode is remembered between app launches (localStorage key: accountSortMode)
+let accountSortMode = (function () {
+  try {
+    const m = localStorage.getItem("accountSortMode");
+    return m === "az" || m === "za" ? m : "default";
+  } catch (e) {
+    return "default";
+  }
+})(); // 'default' | 'az' | 'za'
+
+function applyAccountSortUI() {
+  const btn = document.getElementById("accountSortBtn");
+  const icon = document.getElementById("accountSortIcon");
+  const label = document.getElementById("accountSortLabel");
+  if (!icon || !label) return;
+  if (accountSortMode === "az") {
+    icon.innerHTML = '<i class="fa-solid fa-arrow-up-a-z"></i>';
+    label.textContent = "Sort: A–Z";
+  } else if (accountSortMode === "za") {
+    icon.innerHTML = '<i class="fa-solid fa-arrow-down-z-a"></i>';
+    label.textContent = "Sort: Z–A";
+  } else {
+    icon.innerHTML = '<i class="fa-solid fa-arrow-up-arrow-down"></i>';
+    label.textContent = "Sort: Default";
+  }
+  if (btn) {
+    const on = accountSortMode !== "default";
+    btn.style.borderColor = on ? "var(--gold)" : "var(--glass-border)";
+    btn.style.color = on ? "var(--gold)" : "var(--text-secondary)";
+  }
+}
 
 function toggleAccountSort() {
   if (accountSortMode === "default") accountSortMode = "az";
   else if (accountSortMode === "az") accountSortMode = "za";
   else accountSortMode = "default";
-  const btn = document.getElementById("accountSortBtn");
-  const icon = document.getElementById("accountSortIcon");
-  const label = document.getElementById("accountSortLabel");
-  // CHANGED: FA icons replace text arrows in sort button
-  if (accountSortMode === "az") {
-    icon.innerHTML = '<i class="fa-solid fa-arrow-up-a-z"></i>';
-    label.textContent = "Sort: A–Z";
-    if (btn) {
-      btn.style.borderColor = "var(--gold)";
-      btn.style.color = "var(--gold)";
-    }
-  } else if (accountSortMode === "za") {
-    icon.innerHTML = '<i class="fa-solid fa-arrow-down-z-a"></i>';
-    label.textContent = "Sort: Z–A";
-    if (btn) {
-      btn.style.borderColor = "var(--gold)";
-      btn.style.color = "var(--gold)";
-    }
-  } else {
-    icon.innerHTML = '<i class="fa-solid fa-arrow-up-arrow-down"></i>';
-    label.textContent = "Sort: Default";
-    if (btn) {
-      btn.style.borderColor = "var(--glass-border)";
-      btn.style.color = "var(--text-secondary)";
-    }
-  }
+  try {
+    localStorage.setItem("accountSortMode", accountSortMode);
+  } catch (e) {}
+  applyAccountSortUI();
   updateAccounts();
 }
+
+window.addEventListener("DOMContentLoaded", applyAccountSortUI);
 
 function updateAccounts() {
   // FIX: Recompute balances here too so summary stats are always accurate
@@ -3792,7 +3780,9 @@ function executeReset() {
   var _keepTheme = localStorage.getItem("appTheme");
   var _keepCurrency = localStorage.getItem("currency");
   var _keepOnboarding = localStorage.getItem("onboardingDone");
+  var _keepAcctSort = localStorage.getItem("accountSortMode");
   localStorage.clear();
+  if (_keepAcctSort) localStorage.setItem("accountSortMode", _keepAcctSort);
   if (_keepColorMode) localStorage.setItem("colorMode", _keepColorMode);
   if (_keepTheme) localStorage.setItem("appTheme", _keepTheme);
   if (_keepCurrency) localStorage.setItem("currency", _keepCurrency);
