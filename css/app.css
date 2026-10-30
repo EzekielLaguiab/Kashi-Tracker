@@ -11446,3 +11446,6 @@ body.light-mode #searchModal input[type="date"] { color-scheme: light; }
 
 /* Help dialog: scroll if the content is taller than the screen */
 #helpModalBox { max-height: 86dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+/* No pull-down-to-refresh / rubber-band reload (updates are automatic) */
+html, body { overscroll-behavior-y: none; }

@@ -39,10 +39,55 @@
     <meta name="apple-mobile-web-app-title" content="Kashi Tracker" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
+    <script>
+      // Pre-paint: match the saved light/dark colour and keep the page hidden
+      // until the theme is applied, so the app never flashes dark on open.
+      window.__applyLook = function () {
+        try {
+          if (!document.body) return false;
+          var m = localStorage.getItem("colorMode");
+          if (m === null || m === "light") document.body.classList.add("light-mode");
+          document.body.setAttribute("data-theme", localStorage.getItem("appTheme") || "gold");
+        } catch (e) {}
+        return true;
+      };
+      (function () {
+        try {
+          var m = localStorage.getItem("colorMode");
+          document.documentElement.style.background =
+            m === null || m === "light" ? "#efeae3" : "#1c1816";
+        } catch (e) {}
+        var s = document.createElement("style");
+        s.id = "boot-hide";
+        s.textContent = "body{visibility:hidden}*,*::before,*::after{transition:none!important}";
+        document.head.appendChild(s);
+        // safety net: never leave the page hidden, but apply the look first
+        (function reveal() {
+          if (!window.__applyLook()) return setTimeout(reveal, 100);
+          var x = document.getElementById("boot-hide");
+          if (x) x.textContent = "*,*::before,*::after{transition:none!important}";
+        })();
+      })();
+    </script>
     <link rel="stylesheet" href="css/all.min.css" />
     <link rel="stylesheet" href="css/app.css" />
   </head>
   <body>
+    <script>
+      window.__applyLook();
+      (function () {
+        var b = document.getElementById("boot-hide");
+        if (b) b.textContent = "*,*::before,*::after{transition:none!important}";
+        window.addEventListener("load", function () {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              var x = document.getElementById("boot-hide");
+              if (x) x.remove();
+            });
+          });
+        });
+      })();
+    </script>
     <div class="notification-toast" id="notificationToast">
       <div class="notification-header">
         <!-- CHANGED: FA icon replaces emoji ✓ -->
@@ -1406,10 +1451,6 @@
       <div class="ob-step active" id="ob-step-1">
         <img class="ob-logo-img" src="icons/icon-512.png" alt="Kashi" width="180" height="180" />
         <div class="ob-logo-sub">Your personal money tracker</div>
-        <!-- FIXED: fa-hand-wave is FA Pro-only and renders blank on free CDN; replaced with fa-hand which is free -->
-        <div class="ob-emoji">
-          <i class="fa-solid fa-hand ob-icon-large"></i>
-        </div>
         <div class="ob-title">Welcome to Kashi Tracker!</div>
         <div class="ob-desc">
           Track your income, expenses, and budgets all in one place. Let's get
@@ -1638,20 +1679,60 @@
       }
       window.addEventListener("load", fixBottomSpace, false);
 
-      // ── Service worker (offline + installable) ──
+      // ── Service worker (offline + installable) + automatic updates ──
       if ("serviceWorker" in navigator) {
         var hadController = !!navigator.serviceWorker.controller;
-        var reloaded = false;
-        navigator.serviceWorker.addEventListener("controllerchange", function () {
-          // a newer version just took over: reload once so the page and code match
-          if (hadController && !reloaded) {
-            reloaded = true;
+        var pendingReload = false;
+        var swReg = null;
+
+        // Safe moment to reload = app in background, or the user isn't in the middle of something
+        function userIsBusy() {
+          var a = document.activeElement;
+          if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return true;
+          if (document.querySelector(".modal.active")) return true;
+          var ids = ["deleteConfirmModal", "validationModal", "resetModal", "helpModal",
+            "feedbackModal", "currencyModal", "txnDetailModal", "copyBudgetModal"];
+          for (var i = 0; i < ids.length; i++) {
+            var m = document.getElementById(ids[i]);
+            if (m && m.style.display === "block") return true;
+          }
+          var ob = document.getElementById("onboardingOverlay");
+          return !!(ob && !ob.classList.contains("hidden"));
+        }
+        function tryReload() {
+          if (pendingReload && (document.hidden || !userIsBusy())) {
+            pendingReload = false;
             location.reload();
           }
+        }
+
+        navigator.serviceWorker.addEventListener("controllerchange", function () {
+          // a newer version just took over: reload (once) so page and code match
+          if (!hadController) {
+            hadController = true; // first install taking control: nothing to reload
+            return;
+          }
+          pendingReload = true;
+          tryReload();
         });
+        setInterval(tryReload, 3000);
+
+        function checkForUpdate() {
+          if (swReg) swReg.update().catch(function () {});
+        }
         window.addEventListener("load", function () {
-          navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(function () {});
+          navigator.serviceWorker
+            .register("sw.js", { updateViaCache: "none" })
+            .then(function (reg) { swReg = reg; })
+            .catch(function () {});
         });
+        // look for a new version whenever the app comes back to the foreground,
+        // and every 30 minutes while it stays open
+        document.addEventListener("visibilitychange", function () {
+          if (document.visibilityState === "visible") checkForUpdate();
+          else tryReload();
+        });
+        setInterval(checkForUpdate, 30 * 60 * 1000);
       }
     </script>
     <script src="js/chart.min.js"></script>
