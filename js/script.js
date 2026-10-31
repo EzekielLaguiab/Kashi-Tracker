@@ -71,9 +71,20 @@ function todayPHString() {
 }
 // ─────────────────────────────────────────────────────────────
 
-let currentMonth = new Date();
-let currentBudgetMonth = new Date(); // FIX BUG 2: separate from currentMonth so Budget nav doesn't shift Records view
-let currentAnalysisMonth = new Date();
+// Month pickers hold the 15th of the month. Using today's date (e.g. the 31st) made
+// setMonth() overflow: Oct 31 -> "Nov 31" = Dec 1, and Oct 31 -> "Sep 31" = Oct 1.
+function _midMonth() {
+  const d = new Date();
+  d.setDate(15);
+  return d;
+}
+function _shiftMonth(d, delta) {
+  d.setDate(15);
+  d.setMonth(d.getMonth() + delta);
+}
+let currentMonth = _midMonth();
+let currentBudgetMonth = _midMonth(); // separate from currentMonth so Budget nav doesn't shift Records view
+let currentAnalysisMonth = _midMonth();
 let currentTransactionType = "income";
 let currentSelectorType = "from";
 let calcExpression = "0";
@@ -507,13 +518,13 @@ function renderSidebar() {
 
 // ── Month Navigation ──────────────────────────────────────────
 function previousMonth() {
-  currentMonth.setMonth(currentMonth.getMonth() - 1);
+  _shiftMonth(currentMonth, -1);
   updateMonthDisplay();
   updateRecords();
 }
 
 function nextMonth() {
-  currentMonth.setMonth(currentMonth.getMonth() + 1);
+  _shiftMonth(currentMonth, 1);
   updateMonthDisplay();
   updateRecords();
 }
@@ -536,25 +547,25 @@ function updateBudgetMonthDisplay() {
 }
 
 function previousBudgetMonth() {
-  currentBudgetMonth.setMonth(currentBudgetMonth.getMonth() - 1); // FIX BUG 2: use dedicated currentBudgetMonth
+  _shiftMonth(currentBudgetMonth, -1);
   updateBudgetMonthDisplay();
   updateBudgets();
 }
 
 function nextBudgetMonth() {
-  currentBudgetMonth.setMonth(currentBudgetMonth.getMonth() + 1); // FIX BUG 2: use dedicated currentBudgetMonth
+  _shiftMonth(currentBudgetMonth, 1);
   updateBudgetMonthDisplay();
   updateBudgets();
 }
 
 function previousAnalysisMonth() {
-  currentAnalysisMonth.setMonth(currentAnalysisMonth.getMonth() - 1);
+  _shiftMonth(currentAnalysisMonth, -1);
   updateAnalysisMonthDisplay();
   updateAnalysis();
 }
 
 function nextAnalysisMonth() {
-  currentAnalysisMonth.setMonth(currentAnalysisMonth.getMonth() + 1);
+  _shiftMonth(currentAnalysisMonth, 1);
   updateAnalysisMonthDisplay();
   updateAnalysis();
 }
