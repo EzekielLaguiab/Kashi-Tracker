@@ -21,7 +21,8 @@ let accounts = _safeLoad("accounts", [
 ]);
 // UPDATED: fallback — patch any saved account that is missing an icon
 accounts = accounts.map((a) => ({ ...a, icon: a.icon || "E-wallet.png" }));
-let incomeCategories = _safeLoad("incomeCategories", [
+// Default categories — used on first run AND when "Reset All Data" is confirmed
+const DEFAULT_INCOME_CATEGORIES = [
   { id: 1, name: "Salary", icon: "💼" },
   { id: 2, name: "Refunds", icon: "↩️" },
   { id: 3, name: "Grants", icon: "🎁" },
@@ -32,8 +33,8 @@ let incomeCategories = _safeLoad("incomeCategories", [
   { id: 8, name: "Bonus", icon: "🌟" },
   { id: 9, name: "Side Job", icon: "🔧" },
   { id: 10, name: "Rental", icon: "🏠" },
-]);
-let expenseCategories = _safeLoad("expenseCategories", [
+];
+const DEFAULT_EXPENSE_CATEGORIES = [
   { id: 1, name: "Food", icon: "🍽️" },
   { id: 2, name: "Transport", icon: "🚗" },
   { id: 3, name: "Entertainment", icon: "🎬" },
@@ -54,7 +55,16 @@ let expenseCategories = _safeLoad("expenseCategories", [
   { id: 18, name: "Gifts", icon: "🎀" },
   { id: 19, name: "Subscriptions", icon: "📺" },
   { id: 20, name: "Personal Care", icon: "🧴" },
-]);
+];
+const _cloneCats = (list) => list.map((c) => ({ ...c }));
+let incomeCategories = _safeLoad(
+  "incomeCategories",
+  _cloneCats(DEFAULT_INCOME_CATEGORIES),
+);
+let expenseCategories = _safeLoad(
+  "expenseCategories",
+  _cloneCats(DEFAULT_EXPENSE_CATEGORIES),
+);
 let budgets = _safeLoad("budgets", []);
 
 // ── Device Timezone (auto-detected) ──────────────────────────
@@ -3772,10 +3782,6 @@ function checkResetInput() {
 }
 
 function executeReset() {
-  // FIX: Snapshot categories BEFORE clearing localStorage so custom categories survive reset
-  const savedIncome = JSON.parse(JSON.stringify(incomeCategories));
-  const savedExpense = JSON.parse(JSON.stringify(expenseCategories));
-
   transactions = [];
   budgets = [];
   // UPDATED: default account icons on reset — use local PNG filenames
@@ -3783,8 +3789,9 @@ function executeReset() {
     { id: 1, name: "Card", initialBalance: 0, balance: 0, icon: "Debit.png" },
     { id: 2, name: "Cash", initialBalance: 0, balance: 0, icon: "Cash.png" },
   ];
-  incomeCategories = savedIncome;
-  expenseCategories = savedExpense;
+  // categories go back to the default lists too
+  incomeCategories = _cloneCats(DEFAULT_INCOME_CATEGORIES);
+  expenseCategories = _cloneCats(DEFAULT_EXPENSE_CATEGORIES);
 
   // FIXED: preserve UI preferences (theme, dark mode, currency, onboarding) across reset
   var _keepColorMode = localStorage.getItem("colorMode");
@@ -3803,7 +3810,7 @@ function executeReset() {
   document.getElementById("resetModal").style.display = "none";
   allowBodyScroll(); // FIX: restore scroll after reset modal closes
   showNotification('<i class="fa-solid fa-trash-can"></i>', "Data Reset", [
-    "All records, budgets and account balances have been cleared.",
+    "Records, accounts, budgets and categories are back to default.",
   ]);
 }
 
@@ -3906,21 +3913,55 @@ function handleRestoreFile(event) {
         }
       });
     }
-    const mergeCats = (list, incoming, fallbackIcon) => {
-      if (!Array.isArray(incoming)) return;
+    // Categories: the backup's list is used as-is. Any current category that is
+    // still used by a transaction or budget is kept so nothing is left orphaned.
+    const restoreCats = (current, incoming, fallbackIcon, usedNames) => {
+      if (!Array.isArray(incoming) || incoming.length === 0) return null;
+      const seen = new Set();
+      const list = [];
       incoming.forEach((c) => {
         if (!c || !c.name) return;
-        if (!list.find((x) => x.name.toLowerCase() === c.name.toLowerCase()))
-          list.push({ id: c.id || Date.now() + Math.random(), name: c.name, icon: c.icon || fallbackIcon });
+        const key = String(c.name).toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        list.push({
+          id: c.id != null ? c.id : null,
+          name: String(c.name),
+          icon: c.icon || fallbackIcon,
+        });
       });
+      current.forEach((c) => {
+        const key = String(c.name).toLowerCase();
+        if (!seen.has(key) && usedNames.has(key)) {
+          seen.add(key);
+          list.push({ ...c });
+        }
+      });
+      const ids = new Set();
+      let nextId = 1 + Math.max(0, ...list.map((c) => Number(c.id) || 0));
+      list.forEach((c) => {
+        if (c.id == null || ids.has(c.id)) c.id = nextId++;
+        ids.add(c.id);
+      });
+      return list;
     };
-    mergeCats(incomeCategories, data.incomeCategories, "💵");
-    mergeCats(expenseCategories, data.expenseCategories, "💰");
     if (Array.isArray(data.budgets))
       data.budgets.forEach((b) => {
         if (b && !budgets.find((x) => x.category === b.category && x.month === b.month))
           budgets.push(b);
       });
+    const lc = (v) => String(v || "").toLowerCase();
+    const usedIncome = new Set(
+      transactions.filter((t) => t.type === "income").map((t) => lc(t.category)),
+    );
+    const usedExpense = new Set(
+      transactions.filter((t) => t.type === "expense").map((t) => lc(t.category)),
+    );
+    budgets.forEach((b) => usedExpense.add(lc(b.category)));
+    const newIncome = restoreCats(incomeCategories, data.incomeCategories, "💵", usedIncome);
+    const newExpense = restoreCats(expenseCategories, data.expenseCategories, "💰", usedExpense);
+    if (newIncome) incomeCategories = newIncome;
+    if (newExpense) expenseCategories = newExpense;
 
     updateAccountBalances();
     saveData();
@@ -3931,6 +3972,10 @@ function handleRestoreFile(event) {
     if (invalidCount > 0) details.push(invalidCount + " invalid record(s) skipped");
     if (newAccounts > 0) details.push(newAccounts + " new account(s) added");
     if (updatedAccounts > 0) details.push(updatedAccounts + " account(s) updated");
+    if (newIncome || newExpense)
+      details.push(
+        incomeCategories.length + " income and " + expenseCategories.length + " expense categories restored",
+      );
     showNotification('<i class="fa-solid fa-upload"></i>', "Restore Complete", details);
   };
   reader.readAsText(file);
